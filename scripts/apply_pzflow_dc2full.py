@@ -163,6 +163,16 @@ del data_unscaled['logmass']
 # quality cuts
 data_unscaled = data_unscaled[(data_unscaled['PZflowredshift']>=0.0) & (data_unscaled['PZflowredshift']<=1.0)]
 data_unscaled = data_unscaled[(data_unscaled['PZflowSFRtot'] > 1.e1) & (data_unscaled['PZflowSFRtot'] < 1.e10)]
+for band in ['Mag_true_g_sdss_z0', 'Mag_true_r_sdss_z0', 'Mag_true_i_sdss_z0']:
+    m, b = np.polyfit(data_unscaled[band], data_unscaled['Mag_true_z_sdss_z0'], 1)
+    samples_outliers = data_unscaled[np.abs((m*unscaled[band] + b) - data_unscaled['Mag_true_z_sdss_z0']) > 1.3]
+    samples_inliers = data_unscaled[np.abs((m*data_unscaled[band] + b) - data_unscaled['Mag_true_z_sdss_z0']) < 1.3]
+    plt.plot(samples_outliers[band], samples_outliers['Mag_true_z_sdss_z0'], 'o', ms=2)
+    plt.plot(samples_inliers[band], samples_inliers['Mag_true_z_sdss_z0'], 'o', ms=1, alpha=0.1)
+    plt.xlabel(band)
+    plt.ylabel('Mag_true_z_sdss_z0')
+    plt.savefig("plots/magnitude_outlier_cuts.png")
+    data_unscaled =  data_unscaled[np.abs((m*data_unscaled[band] + b) - data_unscaled['Mag_true_z_sdss_z0']) < 1.3]
 # save
 data_unscaled.to_csv("/global/cscratch1/sd/mlokken/sn_hostenv/DC2full_pzRedshifts_SFR_39iter.csv",index=False)
 
