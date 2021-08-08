@@ -6,7 +6,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib as mpl
-
+from scipy.stats import logistic
+from scipy.stats import norm
 
 #change the plot styling
 sns.set_context("talk",font_scale=1.5)
@@ -43,34 +44,48 @@ plt.rcParams.update({
     "font.serif": ["Palatino"],
 })
 
-SNIa_hostlib = pd.read_csv("/Users/alexgagliano/Documents/Research/DESC/tables/matchedGals_IaGhostlib.tar.gz")
+#SNIa_hostlib = pd.read_csv("/Users/alexgagliano/Documents/Research/DESC/tables/matchedGals_IaGhostlib.tar.gz")
+SNIa_hostlib = pd.read_csv("/Users/alexgagliano/Documents/Research/DESC/tables/matchedGals_IbcSLSNIGhostlib.tar.gz")
 
 SNLS = pd.read_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SNLS_IaFits.csv", delimiter='\t')
-np.nanmin(SNLS['x1'])
-np.nanmax(SNLS['x1'])
-np.nanmin(SNIa_hostlib['PZflowSFRtot'])
+#np.nanmin(SNLS['x1'])
+#np.nanmax(SNLS['x1'])
+#np.nanmin(np.log10(SNIa_hostlib['stellar_mass']))
+#np.nanmax(np.log10(SNIa_hostlib['stellar_mass']))
 
-plt.hist(SNIa_hostlib['PZflowSFRtot']/1.e9)
+#plt.hist(SNIa_hostlib['PZflowSFRtot']/1.e9)
 
-plt.hist(np.log10(SNIa_hostlib['PZflowSFRtot']/1.e9))
+#plt.hist(np.log10(SNIa_hostlib['PZflowSFRtot']/1.e9))
 
-np.nanmin(np.log10(SNIa_hostlib['PZflowSFRtot']/1.e9))
+#np.nanmin(np.log10(SNIa_hostlib['PZflowSFRtot']/1.e9))
+#np.nanmax(np.log10(SNIa_hostlib['PZflowSFRtot']/1.e9))
 #x1: maybe 100 values between -3 and 3
 #logmass: 5.5 to 12.5
 #SFR: 10^1 to 10^10
 
-N = 101
+stepsize = 0.2
+stepsizeIc = 0.5
+stepsizeAGN = 0.1
+
+#N = 101
+#a bit of funnny business to ensure that the stepsize is the same for all the params
 #commented-out grids are from Maria Vincenzi's original WGTMAPS!
-x1_ = np.linspace(-5, 5, int((N-1)/5)+1)
+x1_start = -5
+x1_end = 5
+x1_ = np.linspace(x1_start, x1_end, int((x1_end - x1_start)/stepsize)+1)
 #x1_ = np.array([-5., -4., -3., -2., -1.,  0.,  1.,  2.,  3.,  4.,  5.]) #forcing to the Vincenzi vals
 
-logmass_ = np.linspace(4.5, 14, N)
+logmass_start = 4.5
+logmass_end = 12.5
+logmass_ = np.linspace(logmass_start, logmass_end, int((logmass_end - logmass_start)/stepsize)+1)
 #logmass_ = np.array([ 5.   ,  5.225,  5.45 ,  5.675,  5.9  ,  6.125,  6.35 ,  6.575,
 #        6.8  ,  7.025,  7.25 ,  7.475,  7.7  ,  7.925,  8.15 ,  8.375,
 #        8.6  ,  8.825,  9.05 ,  9.275,  9.5  ,  9.725,  9.95 , 10.175,
 #       10.4  , 10.625, 10.85 , 11.075, 11.3  , 11.525, 11.75 , 11.975,
 #       12.2  , 12.425, 12.65 , 12.875, 13.1  , 13.325, 13.55 , 13.775])
-logSFR_ = np.linspace(-8.5, 2, N) #
+logSFR_start = -8.
+logSFR_end = 2.
+logSFR_ = np.linspace(logSFR_start, logSFR_end, int((logSFR_end - logSFR_start)/stepsize)+1) #
 #SFR_ = 10**np.array([-20.1  , -19.875, -19.65 , -19.425, -19.2  , -18.975, -18.75 ,
 #       -18.525, -18.3  , -18.075, -17.85 , -17.625, -17.4  , -17.175,
 #       -16.95 , -16.725, -16.5  , -16.275, -16.05 , -15.825, -15.6  ,
@@ -87,14 +102,44 @@ logSFR_ = np.linspace(-8.5, 2, N) #
 #         0.375,   0.6  ,   0.825,   1.05 ,   1.275,   1.5  ,   1.725,
 #         1.95 ,   2.175,   2.4  ,   2.625,   2.85 ,   3.075,   3.3  ,
 #         3.525,   3.75 ,   3.975])
+SFR_ = 10**(logSFR_)
+
+#Mg should go between -24, -14
+#g 12.5 to 32.5
+#r 12.5 to 32.5
+Mg_start = -24.5
+Mg_end = -14
+g_start = 12.5
+g_end = 32.5
+r_start = 12.5
+r_end = 32.5
+
+#run it for Ic and Ic-BL
+Mg_ = np.linspace(Mg_start, Mg_end, int((Mg_end - Mg_start)/stepsizeIc)+1) #
+g_  = np.linspace(g_start, g_end, int((g_end - g_start)/stepsizeIc)+1)
+r_  = np.linspace(r_start, r_end, int((r_end - g_start)/stepsizeIc)+1)
+logmassIc_ = np.linspace(logmass_start, logmass_end, int((logmass_end - logmass_start)/stepsizeIc)+1)
+logSFRIc_ = np.linspace(logSFR_start, logSFR_end, int((logSFR_end - logSFR_start)/stepsizeIc)+1) #
+
+Mg_mesh, g_mesh, r_mesh, logmass_meshIc, SFR_meshIc = np.meshgrid(Mg_, g_, r_, logmassIc_, logSFRIc_)
 
 x1_mesh, logmass_mesh, SFR_mesh = np.meshgrid(x1_, logmass_, logSFR_)
-
 x1_allMesh = np.ravel(x1_mesh)
 logmass_allMesh = np.ravel(logmass_mesh)
 mass_allMesh = 10**logmass_allMesh
 logSFR_allMesh = np.ravel(SFR_mesh)
 SFR_allMesh = 10**logSFR_allMesh
+
+Mg_allMesh = np.ravel(Mg_mesh)
+g_allMesh = np.ravel(g_mesh)
+r_allMesh = np.ravel(r_mesh)
+logmass_allMeshIc = np.ravel(logmass_meshIc)
+mass_allMeshIc = 10**logmass_allMeshIc
+logSFR_allMeshIc = np.ravel(SFR_meshIc)
+SFR_allMeshIc = 10**logSFR_allMeshIc
+
+logmass_allMeshAGN = np.ravel(np.linspace(logmass_start, logmass_end, int((logmass_end - logmass_start)/stepsize)+1))
+mass_allMeshAGN = 10**logmass_allMeshAGN
 
 def RateII(Msol, SFR):
     rate = np.zeros(len(Msol))
@@ -103,15 +148,62 @@ def RateII(Msol, SFR):
     rate[cond1] = Msol[cond1]**0.16
     return rate
 
-def RateIbc(Msol, SFR):
+def RateIax(Msol, SFR, x1):
+    rate = np.zeros(len(Msol))
+    sSFR = SFR/Msol
+    cond1 = np.log10(sSFR) >= -11.5
+    cond2 = np.log10(sSFR) < -11.5 #exponential dropoff
+    rate[cond1] = R_AB(Msol[cond1], SFR[cond1])*Rstar(x1[cond1], Msol[cond1])
+    rate[cond2] = np.exp(np.log10(sSFR[cond2]))
+    rate[cond2] /= np.nanmax(rate[cond2])
+    #rate[cond2] *= R_AB(Msol[cond2], SFR[cond2])*Rstar(x1[cond2], Msol[cond2])
+    rate[cond2] *= 1.e-10
+    return rate
+
+def Rate91bg(Msol, SFR, x1):
+    rate = np.zeros(len(Msol))
+    sSFR = SFR/Msol
+    cond1 = np.log10(sSFR) < -11.5
+    cond2 = np.log10(sSFR) >= -11.5 #exponential dropoff
+    rate[cond1] = R_AB(Msol[cond1], SFR[cond1])*Rstar(x1[cond1], Msol[cond1])
+    rate[cond2] = np.exp(-np.log10(sSFR[cond2]))
+    rate[cond2] /= np.nanmax(rate[cond2])
+    #rate[cond2] *= R_AB(Msol[cond2], SFR[cond2])*Rstar(x1[cond2], Msol[cond2])
+    rate[cond2] *= 1.e-10
+    return rate
+
+def metal_PDF_SNIc(logOH_12):
+    return logistic.pdf(9*(logOH_12-8.9))
+
+def metal_PDF_SNIc_BL(logOH_12):
+    return logistic.pdf(10*(logOH_12-8.5))
+
+def get_metallicity(Mg, gmag, rmag):
+    alpha = 10.5
+    p3 = -9.02/1.e5
+    p2 = -18.82/1.e3
+    p1 = -836.54/1.e3
+    p0 = -1.87
+    mu = Mg - alpha*(gmag - rmag)
+    logOH_12 = p0 + p1*mu + p2*mu**2 + p3*mu**3
+    return logOH_12
+
+def R_SNIc_metal(Mg, gmag, rmag):
+    logOH_12 = get_metallicity(Mg, gmag, rmag)
+    return metal_PDF_SNIc(logOH_12)
+
+def R_SNIc_BL_metal(Mg, gmag, rmag):
+    logOH_12 = get_metallicity(Mg, gmag, rmag)
+    return metal_PDF_SNIc_BL(logOH_12)
+
+def RateIc(Msol, SFR, Mg, gmag, rmag):
     rate = np.zeros(len(Msol))
     sSFR = SFR/Msol
     cond1 = np.log10(sSFR) >= -11.5
     rate[cond1] = Msol[cond1]**0.36
-    return rate
-
-def RateIa(Msol, SFR, x1):
-    return R_AB(Msol, SFR)*Rstar(x1, Msol)
+    rate2 = R_SNIc_metal(Mg, gmag, rmag)
+    rate_comb = rate*rate2
+    return rate_comb
 
 def R_AB(Msol, SFR):
     #from https://ui.adsabs.harvard.edu/abs/2006ApJ...648..868S
@@ -128,9 +220,74 @@ def Rstar(x1, Msol):
     rate[cond1] = np.exp(-x1[cond1]**2)
     return rate
 
-rate_allMesh_Ia = RateIa(mass_allMesh, SFR_allMesh, x1_allMesh)
-rate_allMesh_II = RateII(mass_allMesh, SFR_allMesh)
-rate_allMesh_Ibc = RateIbc(mass_allMesh, SFR_allMesh)
+def RateIc_BL(Msol, SFR, Mg, gmag, rmag):
+    rate = np.zeros(len(Msol))
+    sSFR = SFR/Msol
+    cond1 = np.log10(sSFR) >= -11.5
+    rate[cond1] = Msol[cond1]**0.36
+    rate2 = R_SNIc_BL_metal(Mg, gmag, rmag)
+    rate_comb = rate*rate2
+    return rate_comb
+
+def RateIb(Msol, SFR):
+    rate = np.zeros(len(Msol))
+    sSFR = SFR/Msol
+    cond1 = np.log10(sSFR) >= -11.5
+    rate[cond1] = Msol[cond1]**0.36
+    return rate
+
+def RateTDE(Msol, SFR):
+    rate = np.ones(len(Msol))
+    cond1 = (np.log10(SFR) >= 0) & (np.log10(Msol) < 11)
+    cond2 = (np.log10(Msol) > 11) & (np.log10(SFR) < 0)
+    cond3 = (np.log10(Msol) > 11) & (np.log10(SFR) >= 0)
+    rate[cond1] = np.exp(-np.log10(SFR[cond1]))
+    rate[cond2] = np.exp(-np.log10(Msol[cond2]))
+    rate[cond3] = np.exp(-(np.log10(Msol[cond3]) + np.log10(SFR[cond3])))
+    #normalize
+    rate[cond1] /= np.nanmax(rate[cond1])
+    rate[cond2] /= np.nanmax(rate[cond2])
+    rate[cond3] /= np.nanmax(rate[cond3])
+    return rate
+
+def RateIa(Msol, SFR, x1):
+    return R_AB(Msol, SFR)*Rstar(x1, Msol)
+
+def RateAGN(Msol):
+    return norm.pdf(np.log10(Msol), loc=10.8, scale=0.5)
+
+#plt.figure(figsize=(10,7))
+#x = np.linspace(7.5, 9.5, num=500)
+#plt.ylim((0, 1))
+#plt.xlim((7.5, 9.5))
+#plt.plot(x, metal_PDF_SNIc_BL(x), c='tab:blue', label='SN Ic-BL')
+#plt.plot(x, metal_PDF_SNIc(x), c='k', label='SN Ic')
+#plt.xlabel("log(O/H)+12")
+#plt.legend(fontsize=14)
+#plt.ylabel("PDF")
+
+def RateSLSNI(Msol, SFR):
+    #from https://arxiv.org/pdf/2012.07180.pdf
+    sSFR = SFR/Msol
+    rate = np.ones(len(Msol))
+    cond1 = (np.log10(sSFR) < -10) #& (Msol > 1.e10)
+    cond2 = np.logical_and(np.log10(Msol) > 10., np.log10(SFR) > -0.5) #& (Msol > 1.e10)
+    rate[cond1] = np.exp(-np.abs(np.log10(sSFR[cond1])+10))
+    rate[cond2] = np.exp(-np.abs(np.log10(Msol[cond2])-3))/(2*np.nanmax(np.exp(-np.abs(np.log10(Msol[cond2])-3)))) #normalize this part
+    return rate
+
+#rate_allMesh_Ia = RateIa(mass_allMesh, SFR_allMesh, x1_allMesh)
+#rate_allMesh_Iax = RateIax(mass_allMesh, SFR_allMesh, x1_allMesh)
+#rate_allMesh_91bg = Rate91bg(mass_allMesh, SFR_allMesh, x1_allMesh)
+#rate_allMesh_TDE = RateTDE(mass_allMesh, SFR_allMesh)
+#rate_allMesh_II = RateII(mass_allMesh, SFR_allMesh)
+#rate_allMesh_Ib = RateIb(mass_allMesh, SFR_allMesh)
+rate_allMesh_Ic = RateIc(mass_allMeshIc, SFR_allMeshIc, Mg_allMesh, g_allMesh, r_allMesh)
+rate_allMesh_Ic_BL = RateIc(mass_allMeshIc, SFR_allMeshIc, Mg_allMesh, g_allMesh, r_allMesh)
+#rate_allMesh_SLSNI = RateSLSNI(mass_allMesh, SFR_allMesh)
+#rate_allMesh_AGN = RateAGN(mass_allMeshAGN)
+
+#plt.plot(np.log10(mass_allMeshAGN), rate_allMesh_AGN)
 
 ##
 #VARNAMES_WGTMAP: x1 LOGMASS LOG_SFR  WGT  SNMAGSHIFT
@@ -146,22 +303,79 @@ rate_allMesh_Ibc = RateIbc(mass_allMesh, SFR_allMesh)
 #    - DATE:  2021
 #      AUTHORS: A. GAGLIANO, M. LOKKEN
 #DOCUMENTATION_END:
-##
+#
+
+#DOCUMENTATION:
+#    PURPOSE: Weighting map for SNe Ic host galaxy association (based on the Vincenzi WGTMAPS)
+#    USAGE_KEY:  WGTMAP_FILE
+#    VALIDATE_SCIENCE: used in PLASTiCC v2.0
+#    NOTES:
+#    - The map also includes correlation with metallicity of the host implicitly through Mg and g-r color
+#    - The map is defined over a logM range of 4.5 to 14, a logSFR range of -8.5 to 2, Mg range of -24.5 to -14,
+#      an mg range of 12.5 to 32.5, and an mr range of 12.5 to 32.5.
+#    VERSIONS:
+#    - DATE:  2021
+#      AUTHORS: A. GAGLIANO, M. LOKKEN
+#DOCUMENTATION_END:
 
 snmagshift = np.zeros(len(logmass_allMesh))
-#VARNAMES_WGTMAP:
 
 weight_prefix = np.array(['WGT:']*len(logmass_allMesh))
-#WGT:
+weight_prefixIc = np.array(['WGT:']*len(logmass_allMeshIc))
+weight_prefixAGN = np.array(['WGT:']*len(logmass_allMeshAGN))
 
-WGTMAP_Ia = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefix, 'LOGMASS':logmass_allMesh, 'LOG_SFR':np.log10(SFR_allMesh), 'x1':x1_allMesh,'WGT':rate_allMesh_Ia, 'SNMAGSHIFT':snmagshift})
-WGTMAP_Ia.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SNIa.WGTMAP",index=False, float_format='%.3f')
+#WGTMAP_Ia = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefix, 'LOGMASS':logmass_allMesh, 'LOG_SFR':np.log10(SFR_allMesh), 'x1':x1_allMesh,'WGT':rate_allMesh_Ia, 'SNMAGSHIFT':snmagshift})
+#WGTMAP_Ia.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SNIa_GHOST.WGTMAP",index=False, float_format='%.3f', sep='  ')
 
-WGTMAP_II = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefix, 'LOGMASS':logmass_allMesh, 'LOG_SFR':np.log10(SFR_allMesh),'WGT':rate_allMesh_II, 'SNMAGSHIFT':snmagshift})
-WGTMAP_II.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SNII.WGTMAP",index=False, float_format='%.3f')
+#WGTMAP_Iax = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefix, 'LOGMASS':logmass_allMesh, 'LOG_SFR':np.log10(SFR_allMesh), 'x1':x1_allMesh,'WGT':rate_allMesh_Iax, 'SNMAGSHIFT':snmagshift})
+#WGTMAP_Iax.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SNIax_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
 
-WGTMAP_Ibc = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefix, 'LOGMASS':logmass_allMesh, 'LOG_SFR':np.log10(SFR_allMesh),'WGT':rate_allMesh_Ibc, 'SNMAGSHIFT':snmagshift})
-WGTMAP_Ibc.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SNIbc.WGTMAP",index=False, float_format='%.3f')
+#WGTMAP_91bg = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefix, 'LOGMASS':logmass_allMesh, 'LOG_SFR':np.log10(SFR_allMesh), 'x1':x1_allMesh,'WGT':rate_allMesh_91bg, 'SNMAGSHIFT':snmagshift})
+#WGTMAP_91bg.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SN91bg_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
+
+#WGTMAP_II = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefix, 'LOGMASS':logmass_allMesh, 'LOG_SFR':np.log10(SFR_allMesh),'WGT':rate_allMesh_II, 'SNMAGSHIFT':snmagshift})
+#WGTMAP_II.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SNII_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
+
+#WGTMAP_Ib = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefix, 'LOGMASS':logmass_allMesh, 'LOG_SFR':np.log10(SFR_allMesh),'WGT':rate_allMesh_Ib})
+#WGTMAP_Ib.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SNIb_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
+
+WGTMAP_Ic = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefixIc, 'LOGMASS':logmass_allMeshIc, 'LOG_SFR':np.log10(SFR_allMeshIc), 'Mag_true_g_sdss_z0': Mg_allMesh, 'mag_true_g_lsst':g_allMesh, 'mag_true_r_lsst':r_allMesh, 'WGT':rate_allMesh_Ic})
+WGTMAP_Ic.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SNIc_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
+WGTMAP_Ic_BL = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefixIc, 'LOGMASS':logmass_allMeshIc, 'LOG_SFR':np.log10(SFR_allMeshIc),'Mag_true_g_sdss_z0': Mg_allMesh, 'mag_true_g_lsst':g_allMesh, 'mag_true_r_lsst':r_allMesh, 'WGT':rate_allMesh_Ic_BL})
+WGTMAP_Ic_BL.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SNIcBL_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
+
+#WGTMAP_Ic_BL = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefixIc, 'LOGMASS':logmass_allMeshIc, 'LOG_SFR':np.log10(SFR_allMeshIc),'M_g': Mg_allMesh, 'g_obs':g_allMesh, 'r_obs':r_allMesh, 'WGT':rate_allMesh_Ic_BL})
+#WGTMAP_Ic_BL.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SNIcBL_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
+
+plt.plot(WGTMAP_AGN['LOGMASS'], WGTMAP_AGN['WGT'])
+plt.xlabel("LOGMASS")
+plt.ylabel("PDF")
+plt.xlim((8, 12))
+plt.ylim((0, 3))
+plt.savefig("/Users/alexgagliano/Documents/Research/DESC/plots/AGN_WGTMAP_logMsol.png",dpi=300,bbox_inches='tight')
+
+#WGTMAP_AGN = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefixAGN, 'LOGMASS':logmass_allMeshAGN,'WGT':rate_allMesh_AGN})
+#WGTMAP_AGN.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/AGN_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
+
+WGTMAP_TDE = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefix, 'LOGMASS':logmass_allMesh,'LOG_SFR':np.log10(SFR_allMesh),'WGT':rate_allMesh_TDE})
+#WGTMAP_TDE.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/TDE_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
+
+#WGTMAP_SLSNI = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefix, 'LOGMASS':logmass_allMesh, 'LOG_SFR':np.log10(SFR_allMesh),'WGT':rate_allMesh_SLSNI, 'SNMAGSHIFT':snmagshift})
+#WGTMAP_SLSNI.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SLSNI_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
+
+####### TDE
+plt.figure(figsize=(10,7))
+sns.scatterplot(WGTMAP_TDE['LOGMASS'], WGTMAP_TDE['LOG_SFR'], hue=WGTMAP_TDE['WGT'], legend=False, s=150, edgecolor=None,palette='cividis')
+plt.xlabel(r"log$_{10}$($M/M_{\odot})$");
+plt.ylabel(r"log$_{10}$(SFR/$M_{\odot}$ yr${-1}$)");
+plt.savefig("/Users/alexgagliano/Documents/Research/DESC/plots/TDE_WGTMAP_logSFR_v_logmass.png",dpi=300,bbox_inches='tight')
+
+####### SLSNI
+#plt.figure(figsize=(10,7))
+#sns.scatterplot(WGTMAP_SLSNI['LOGMASS'], WGTMAP_SLSNI['LOG_SFR'], hue=WGTMAP_SLSNI['WGT'], legend=False, s=150, edgecolor=None,palette='cividis')
+#plt.xlabel(r"log$_{10}$($M/M_{\odot})$");
+#plt.ylabel(r"log$_{10}$(SFR/$M_{\odot}$ yr${-1}$)");
+#plt.savefig("/Users/alexgagliano/Documents/Research/DESC/plots/SLSNI_WGTMAP_logSFR_v_logmass.png",dpi=300,bbox_inches='tight')
 
 #marginalize over x1 to just get logSFR vs logMsol
 logmass_x1_marg = []
@@ -169,22 +383,22 @@ SFR_x1_marg = []
 WGT_x1_marg = []
 
 for temp_logmass in logmass_:
-    tempDF = WGTMAP_Ia[WGTMAP_Ia['logmass']==temp_logmass]
+    tempDF = WGTMAP_Iax[WGTMAP_Iax['LOGMASS']==temp_logmass]
     for temp_SFR in SFR_:
-        tempDF_WGT = tempDF.loc[tempDF['SFR']==temp_SFR, 'WGT'].values
+        tempDF_WGT = tempDF.loc[10**(tempDF['LOG_SFR'])==temp_SFR, 'WGT'].values
         newWGT = np.nansum(tempDF_WGT)
         logmass_x1_marg.append(temp_logmass)
         SFR_x1_marg.append(temp_SFR)
         WGT_x1_marg.append(newWGT)
 
-WGTMAPIa_x1_marg = pd.DataFrame({'logmass':np.array(logmass_x1_marg), 'SFR':np.array(SFR_x1_marg), 'WGT':np.array(WGT_x1_marg)})
-
+WGTMAPIax_x1_marg = pd.DataFrame({'logmass':np.array(logmass_x1_marg), 'SFR':np.array(SFR_x1_marg), 'WGT':np.array(WGT_x1_marg)})
 plt.figure(figsize=(10,7))
-sns.scatterplot(logmass_x1_marg, np.log10(SFR_x1_marg), hue=np.log10(WGT_x1_marg), legend=False, s=50, edgecolor=None)
-plt.xlabel(r"log$_{10}$($M/M_{\odot})$")
-plt.ylabel(r"log$_{10}$(SFR/$M_{\odot}$ yr${-1}$)")
-plt.savefig("/Users/alexgagliano/Documents/Research/DESC/plots/SNIa_WGTMAP_logSFR_v_logmass.png",dpi=300,bbox_inches='tight')
-
+#plt.xlim((5, 13))
+#plt.ylim((-20, 5))
+sns.scatterplot(logmass_x1_marg, np.log10(SFR_x1_marg), hue=-np.log10(WGT_x1_marg),s=180, edgecolor=None,legend=False)
+plt.xlabel(r"log$_{10}$($M/M_{\odot})$");
+plt.ylabel(r"log$_{10}$(SFR/$M_{\odot}$ yr${-1}$)");
+plt.savefig("/Users/alexgagliano/Documents/Research/DESC/plots/SNIax_WGTMAP_logSFR_v_logmass.png",dpi=300,bbox_inches='tight')
 
 Vincenzi_Ia = pd.read_csv("/Users/alexgagliano/Documents/Research/DESC/tables/V21_SNIa_REVISED.WGTMAP_clean", delim_whitespace=True)
 
@@ -210,10 +424,9 @@ plt.xlabel(r"log$_{10}$($M/M_{\odot})$")
 plt.ylabel(r"log$_{10}$(SFR/$M_{\odot}$ yr${-1}$)")
 plt.savefig("/Users/alexgagliano/Documents/Research/DESC/plots/Vincenzi_SNIa_WGTMAP_logSFR_v_logmass.png",dpi=300,bbox_inches='tight')
 
-
 ####### SN Ibc
 plt.figure(figsize=(10,7))
-sns.scatterplot(WGTMAP_Ibc['logmass'], np.log10(WGTMAP_Ibc['SFR']), hue=WGTMAP_Ibc['WGT'], legend=False, s=50, edgecolor=None,palette='cividis')
+sns.scatterplot(WGTMAP_Ibc['LOGMASS'], WGTMAP_Ibc['LOG_SFR'], hue=WGTMAP_Ibc['WGT'], legend=False, s=50, edgecolor=None,palette='cividis')
 plt.xlabel(r"log$_{10}$($M/M_{\odot})$")
 plt.ylabel(r"log$_{10}$(SFR/$M_{\odot}$ yr${-1}$)")
 plt.savefig("/Users/alexgagliano/Documents/Research/DESC/plots/SNIbc_WGTMAP_logSFR_v_logmass.png",dpi=300,bbox_inches='tight')
