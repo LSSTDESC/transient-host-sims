@@ -42,7 +42,7 @@ def min_max_normalize(feature, feature_name):
     plt.clf()
     return(norm_feature)
 
-file = '../data_files/GHOST_restFrame_condenseLabels_0323.csv'
+file = '../../GHOST_restFrame_condenseLabels_0323.tar.gz'
 ghost = pd.read_csv(file)
 
 if mode == 'SN II':
@@ -125,7 +125,7 @@ g_rshift = keydata[:,8]
 # read in file of CosmoDC2 galaxies, with PZFlow SFR and redshifts, limited to abs r-band magnitude < -15
 # and -0.18 < i-z < 0.5
 if full:
-    cdc2 = pd.read_csv("/global/cscratch1/sd/mlokken/sn_hostenv/DC2full_pzRedshifts_SFR_39iter.csv")
+    cdc2 = pd.read_csv("../../DC2full_pzRedshifts_SFR_39iter.csv")
 else:
     cdc2 = pd.read_csv("/global/cscratch1/sd/mlokken/sn_hostenv/DC2_pzRedshifts_SFR_RMag_lt_neg15.csv")
 cI = cdc2['Mag_true_i_sdss_z0']
@@ -220,6 +220,9 @@ cdc2_true = cosmo.get_quantities(['mag_true_u_lsst', 'mag_true_g_lsst','mag_true
                  'size_minor_bulge_true','galaxy_id', 'sersic_disk', 'sersic_bulge', 
                  'position_angle_true', 'ra', 'dec'], filters=filters)
 
+#clear cosmo from memory
+del cosmo
+
 #add photoz_errs from the other catalog
 if full:
     cosmo_pz = GCRCatalogs.load_catalog("cosmoDC2_v1.1.4_image_with_photozs_v1")
@@ -227,6 +230,10 @@ else:
     cosmo_pz = GCRCatalogs.load_catalog("cosmoDC2_v1.1.4_small_with_photozs_v1")
 
 cdc2_pz = cosmo_pz.get_quantities(['galaxy_id', 'mag_err_u_photoz', 'mag_err_g_photoz', 'mag_err_r_photoz', 'mag_err_i_photoz', 'mag_err_z_photoz', 'mag_err_y_photoz', 'photoz_mask'])
+
+#clear cosmo_pz from memory
+del cosmo_pz
+
 photoz_mask  = cdc2_pz['photoz_mask']
 pz_galaxy_id = cdc2_pz['galaxy_id']
 pz_magerr_u  = cdc2_pz['mag_err_u_photoz'][photoz_mask]

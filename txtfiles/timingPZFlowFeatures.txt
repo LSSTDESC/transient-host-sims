@@ -1,0 +1,37 @@
+Loaded up cdc2_nbrs catalog
+Time to save it all.
+Saved full dataset for SN Ia.
+time: 1794.36
+Loaded up cdc2_nbrs catalog
+Time to save it all.
+Saved full dataset for SN II.
+time: 2365.50
+Loaded up cdc2_nbrs catalog
+Time to save it all.
+Saved full dataset for SLSN-I.
+time: 2999.64
+Loaded up cdc2_nbrs catalog
+Time to save it all.
+Saved full dataset for SN IIP.
+time: 3581.46
+Loaded up cdc2_nbrs catalog
+Time to save it all.
+Saved full dataset for SN IIb.
+time: 4200.80
+Loaded up cdc2_nbrs catalog
+Time to save it all.
+Saved full dataset for SN IIn.
+time: 4787.15
+Loaded up cdc2_nbrs catalog
+Time to save it all.
+Saved full dataset for SN Ib.
+time: 5385.58
+kLoaded up cdc2_nbrs catalog
+dTime to save it all.
+Saved full dataset for SN Ic.
+time: 5985.74
+Loaded up cdc2_nbrs catalog
+Time to save it all.
+Saved full dataset for SN Ibc.
+time: 6576.30
+Total time for adding PZ Features: 6576.30
