@@ -1,0 +1,58 @@
+Starting our matching sequence!
+Loaded pzflow-oversampled catalog
+Number of nearest-neighbors matching features: 6
+Number of SN Ia: 8390
+Redshift weighting: 5.0 percent
+Number of neighbors:  381
+SHAPE OF GHOST_VECS IS
+(7855, 6)
+time: 43.95847940444946
+Number of SN II: 3333
+Redshift weighting: 5.0 percent
+Number of neighbors:  1282
+SHAPE OF GHOST_VECS IS
+(2340, 6)
+time: 28.774317741394043
+Number of SLSN-I: 29
+Redshift weighting: 5.0 percent
+Number of neighbors:  103448
+SHAPE OF GHOST_VECS IS
+(29, 6)
+time: 31.78506088256836
+Number of SN IIP: 306
+Redshift weighting: 5.0 percent
+Number of neighbors:  10791
+SHAPE OF GHOST_VECS IS
+(278, 6)
+time: 34.30751657485962
+Number of SN IIb: 93
+Redshift weighting: 5.0 percent
+Number of neighbors:  34482
+SHAPE OF GHOST_VECS IS
+(87, 6)
+time: 33.017749309539795
+Number of SN IIn: 275
+Redshift weighting: 5.0 percent
+Number of neighbors:  12448
+SHAPE OF GHOST_VECS IS
+(241, 6)
+time: 35.0413818359375
+Number of SN Ib: 149
+Redshift weighting: 5.0 percent
+Number of neighbors:  21582
+SHAPE OF GHOST_VECS IS
+(139, 6)
+time: 33.501025676727295
+Number of SN Ic: 235
+Redshift weighting: 5.0 percent
+Number of neighbors:  14354
+SHAPE OF GHOST_VECS IS
+(209, 6)
+time: 34.172926902770996
+Number of SN Ibc: 413
+Redshift weighting: 5.0 percent
+Number of neighbors:  7957
+SHAPE OF GHOST_VECS IS
+(377, 6)
+time: 34.14328360557556
+Time elapsed for matching: 207.94 s
