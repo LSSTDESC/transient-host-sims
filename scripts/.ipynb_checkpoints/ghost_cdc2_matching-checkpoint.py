@@ -1,3 +1,4 @@
+#!/global/common/software/lsst/common/miniconda/current/envs/stack/bin/python
 # set mode: which class from which to match the hosts
 # mode = 'SN Ia'
 # mode = 'SN II'
@@ -5,11 +6,11 @@
 # mode = 'SN IIP'
 # mode = 'SN IIb'
 # mode = 'SN IIn'
-mode = 'SN Ib'
+# mode = 'SN Ib'
 # mode = 'SN Ic'
-# mode = 'SN Ibc'
+mode = 'SN Ibc'
 plotting = False
-full = False
+full = True
 if full:
     tot = 3000000
 else:
@@ -31,6 +32,7 @@ import time
 import seaborn as sns
 from collections import Counter
 from sklearn.preprocessing import StandardScaler
+import numpy.ma as ma
 
 def min_max_normalize(feature, feature_name):
     norm_feature = (feature - np.amin(feature))/(np.amax(feature)-np.amin(feature))
@@ -56,7 +58,7 @@ elif mode == 'SN Ibc':
     ghost = ghost[np.logical_or(np.logical_or(a,b),c)]
 else:
     ghost = ghost[ghost['TransientClass']==mode]
-ghost.reset_index(inplace=True)
+ghost.reset_index(inplace=True, drop=True)
 print("Number of {:s}: {:d}".format(mode,len(ghost)))
 transient_class = ghost['TransientClass']
 gMag_G = ghost['gKronMag_SDSS_abs']
@@ -131,7 +133,7 @@ cZ = cdc2['Mag_true_z_sdss_z0']
 c_iz = cI-cZ
 keep = (c_iz < 0.5)&(c_iz>-0.18)
 cdc2 = cdc2.loc[keep]
-cdc2.reset_index(inplace=True)
+cdc2.reset_index(inplace=True, drop=True)
 cG = cdc2['Mag_true_g_sdss_z0']
 cR = cdc2['Mag_true_r_sdss_z0']
 cI = cI.loc[keep]
@@ -150,7 +152,6 @@ data_keyparams= np.vstack((gR, gI, g_gr, g_iz, g_ellip, g_rshift)).T
 ghost_cdc2 = np.vstack((data_keyparams, sim_keyparams))
 scaler = StandardScaler()
 scaler.fit(ghost_cdc2)
-print(scaler.mean_)
 keyparams_norm = scaler.transform(ghost_cdc2)
 data_keyparams_norm = keyparams_norm[0:len(data_keyparams[:,0]),:]
 sim_keyparams_norm  = keyparams_norm[len(data_keyparams[:,0]):,:]
@@ -159,7 +160,7 @@ div = 20.
 data_keyparams_norm[:,5]/=div
 sim_keyparams_norm[:,5]/=div
 percentage = 1/div*100
-print("Redshift weighting: {:.1f}".format(percentage))
+print("Redshift weighting: {:.1f} percent".format(percentage))
 n_neigh = int(tot/len(data_keyparams_norm))
 print("Number of neighbors: ", n_neigh)
 
@@ -194,38 +195,59 @@ galaxy_ids = cdc2['galaxy_id'].to_numpy()[save_array[:,0].astype(int)]
 # Not good if you want to track closest nn distance.
 unq, idx = np.unique(galaxy_ids, return_index=True)
 check_array_uniques = check_array[idx]
+
 save_array_uniques  = save_array[idx]
 matched_indices = save_array_uniques[:,0].astype(int)
-galaxy_ids = cdc2['galaxy_id'].to_numpy()[matched_indices]
+cdc2_matched = cdc2.iloc[matched_indices]
+galaxy_ids = cdc2_matched['galaxy_id']
+nn_dict = {'GHOST_objID':ghost['objID'].to_numpy()[save_array_uniques[:,1].astype(int)], 'nn_distance':save_array_uniques[:,2]}
+nn_df   = pd.DataFrame(nn_dict)
+nn_df.reset_index(inplace=True, drop=True)
+cdc2_matched.reset_index(inplace=True, drop=True)
+cdc2_matched_nn = pd.concat([cdc2_matched, nn_df], axis=1)
+print(cdc2_matched_nn)
+
 if full:
-    cosmo = GCRCatalogs.load_catalog("cosmoDC2_v1.1.4_image_with_photozs_v1")
+    cosmo = GCRCatalogs.load_catalog("cosmoDC2_v1.1.4")
 else:
-    cosmo = GCRCatalogs.load_catalog("cosmoDC2_v1.1.4_small_with_photozs_v1")
-filters=[(lambda x: np.in1d(x, galaxy_ids), 'galaxy_id')]
+    cosmo = GCRCatalogs.load_catalog("cosmoDC2_v1.1.4_small")
 
-cdc2_other = cosmo.get_quantities(['mag_true_u_lsst', 'mag_err_u_photoz', 'mag_true_g_lsst', 'mag_err_g_photoz','mag_true_r_lsst','mag_err_r_photoz', 'mag_true_i_lsst','mag_err_i_photoz', 'mag_true_z_lsst','mag_err_z_photoz', 'mag_true_Y_lsst','mag_err_y_photoz', 'size_true', 'size_minor_true', 'size_disk_true', 'size_minor_disk_true', 'size_bulge_true', 'size_minor_bulge_true', 'galaxy_id', 'sersic_disk', 'sersic_bulge', 'position_angle_true', 'ra', 'dec'], filters=filters)
+filters=[(lambda x: np.isin(x, galaxy_ids), 'galaxy_id')]
+cdc2_true = cosmo.get_quantities(['mag_true_u_lsst', 'mag_true_g_lsst','mag_true_r_lsst', 
+                'mag_true_i_lsst', 'mag_true_z_lsst',
+                 'mag_true_Y_lsst','size_true', 'size_minor_true', 
+                 'size_disk_true', 'size_minor_disk_true', 'size_bulge_true', 
+                 'size_minor_bulge_true','galaxy_id', 'sersic_disk', 'sersic_bulge', 
+                 'position_angle_true', 'ra', 'dec'], filters=filters)
 
-nonmask = ~cdc2_other['galaxy_id'].mask
-#cdc2_other = cosmo.get_quantities(['mag_true_u_lsst', 'mag_true_g_lsst', 'mag_true_r_lsst', 'mag_true_i_lsst', 'mag_true_z_lsst', 'mag_true_Y_lsst','size_true', 'size_minor_true', 'size_disk_true', 'size_minor_disk_true', 'size_bulge_true', 'size_minor_bulge_true', 'galaxy_id', 'sersic_disk', 'sersic_bulge', 'position_angle_true', 'ra', 'dec'], filters=filters)
-# argsort to order save_array_uniques by galaxy_ids
-sorted_idx = np.argsort(galaxy_ids)
-save_array_uniques_neworder = save_array_uniques[sorted_idx]
-matched_indices = save_array_uniques_neworder[:,0].astype(int)
-galaxy_ids = cdc2['galaxy_id'].to_numpy()[matched_indices]
-sorted_dc2_idx = np.argsort(cdc2_other['galaxy_id'][nonmask])
+#add photoz_errs from the other catalog
+if full:
+    cosmo_pz = GCRCatalogs.load_catalog("cosmoDC2_v1.1.4_image_with_photozs_v1")
+else:
+    cosmo_pz = GCRCatalogs.load_catalog("cosmoDC2_v1.1.4_small_with_photozs_v1")
 
-print(cdc2_other['galaxy_id'][sorted_dc2_idx][:10])
-print(sorted_idx)
-print("{:d} CosmoDC2 galaxies extracted".format(len(cdc2_other['galaxy_id'])))
-print("{:d} matched galaxies".format(len(save_array_uniques)))
-print(len(galaxy_ids))
-print(len(cdc2_other['ra'][sorted_dc2_idx]))
-print(len(sorted_dc2_idx))
+cdc2_pz = cosmo_pz.get_quantities(['galaxy_id', 'mag_err_u_photoz', 'mag_err_g_photoz', 'mag_err_r_photoz', 'mag_err_i_photoz', 'mag_err_z_photoz', 'mag_err_y_photoz', 'photoz_mask'])
+photoz_mask  = cdc2_pz['photoz_mask']
+pz_galaxy_id = cdc2_pz['galaxy_id']
+pz_magerr_u  = cdc2_pz['mag_err_u_photoz'][photoz_mask]
+pz_magerr_g  = cdc2_pz['mag_err_g_photoz'][photoz_mask]
+pz_magerr_r  = cdc2_pz['mag_err_r_photoz'][photoz_mask]
+pz_magerr_i  = cdc2_pz['mag_err_i_photoz'][photoz_mask]
+pz_magerr_z  = cdc2_pz['mag_err_z_photoz'][photoz_mask]
+pz_magerr_y  = cdc2_pz['mag_err_y_photoz'][photoz_mask]
+
+cdc2_pz = pd.DataFrame({'galaxy_id':pz_galaxy_id, 'mag_err_u_photoz':pz_magerr_u, 'mag_err_g_photoz':pz_magerr_g, 'mag_err_r_photoz':pz_magerr_r, 'mag_err_i_photoz':pz_magerr_i, 'mag_err_z_photoz':pz_magerr_z, 'mag_err_y_photoz':pz_magerr_y})
+cdc2_true = pd.DataFrame(cdc2_true)
+cdc2_pz  = pd.DataFrame(cdc2_pz)
+cdc2_nbrs = pd.merge(cdc2_matched_nn, cdc2_true, on=['galaxy_id'], how='left')
+cdc2_nbrs_pz = pd.merge(cdc2_nbrs, cdc2_pz, on=["galaxy_id"], how='left')
+
+print(cdc2_nbrs_pz)
 # save it all
 save_dict = {
 
-'galaxy_id':galaxy_ids, 'ra':cdc2_other['ra'][nonmask][sorted_dc2_idx],'dec':cdc2_other['dec'][nonmask][sorted_dc2_idx], 'redshift':cdc2['PZflowredshift'].to_numpy()[matched_indices], 'mag_true_u_lsst':cdc2_other['mag_true_u_lsst'][nonmask][sorted_dc2_idx], 'mag_err_u_photoz':cdc2_other['mag_err_u_photoz'][nonmask][sorted_dc2_idx],
-    'mag_true_g_lsst':cdc2_other['mag_true_g_lsst'][nonmask][sorted_dc2_idx], 'mag_err_g_photoz':cdc2_other['mag_err_g_photoz'][nonmask][sorted_dc2_idx],'mag_true_r_lsst':cdc2_other['mag_true_r_lsst'][nonmask][sorted_dc2_idx],'mag_err_r_photoz':cdc2_other['mag_err_r_photoz'][nonmask][sorted_dc2_idx], 'mag_true_i_lsst':cdc2_other['mag_true_i_lsst'][nonmask][sorted_dc2_idx],'mag_err_i_photoz':cdc2_other['mag_err_i_photoz'][nonmask][sorted_dc2_idx], 'mag_true_z_lsst':cdc2_other['mag_true_z_lsst'][nonmask][sorted_dc2_idx],'mag_err_z_photoz':cdc2_other['mag_err_z_photoz'][nonmask][sorted_dc2_idx], 'mag_true_Y_lsst':cdc2_other['mag_true_Y_lsst'][nonmask][sorted_dc2_idx],'mag_err_y_photoz':cdc2_other['mag_err_y_photoz'][nonmask][sorted_dc2_idx],'size_true':cdc2_other['size_true'][nonmask][sorted_dc2_idx],'size_minor_true':cdc2_other['size_minor_true'][nonmask][sorted_dc2_idx],'totalSersicIndex':cdc2['morphology/totalSersicIndex'].to_numpy()[matched_indices],'position_angle_true':cdc2_other['position_angle_true'][nonmask][sorted_dc2_idx], 'totalEllipticity':cdc2['morphology/totalEllipticity'].to_numpy()[matched_indices],'stellar_mass':cdc2['stellar_mass'].to_numpy()[matched_indices], 'SFRtot':cdc2['PZflowSFRtot'].to_numpy()[matched_indices],'Mag_true_g_sdss_z0':cdc2['Mag_true_g_sdss_z0'].to_numpy()[matched_indices],'GHOST_objID':ghost['objID'][save_array_uniques_neworder[:,1]], 'nn_distance':save_array_uniques_neworder[:,2]}
+'galaxy_id':cdc2_nbrs_pz['galaxy_id'], 'ra':cdc2_nbrs_pz['ra'],'dec':cdc2_nbrs_pz['dec'], 'redshift':cdc2_nbrs_pz['PZflowredshift'], 'mag_true_u_lsst':cdc2_other['mag_true_u_lsst'][sorted_dc2_idx], 'mag_err_u_photoz':cdc2_other['mag_err_u_photoz'][sorted_dc2_idx],
+    'mag_true_g_lsst':cdc2_other['mag_true_g_lsst'][sorted_dc2_idx], 'mag_err_g_photoz':cdc2_other['mag_err_g_photoz'][sorted_dc2_idx],'mag_true_r_lsst':cdc2_other['mag_true_r_lsst'][sorted_dc2_idx],'mag_err_r_photoz':cdc2_other['mag_err_r_photoz'][sorted_dc2_idx], 'mag_true_i_lsst':cdc2_other['mag_true_i_lsst'][sorted_dc2_idx],'mag_err_i_photoz':cdc2_other['mag_err_i_photoz'][sorted_dc2_idx], 'mag_true_z_lsst':cdc2_other['mag_true_z_lsst'][sorted_dc2_idx],'mag_err_z_photoz':cdc2_other['mag_err_z_photoz'][sorted_dc2_idx], 'mag_true_Y_lsst':cdc2_other['mag_true_Y_lsst'][sorted_dc2_idx],'mag_err_y_photoz':cdc2_other['mag_err_y_photoz'][sorted_dc2_idx],'size_true':cdc2_other['size_true'][sorted_dc2_idx],'size_minor_true':cdc2_other['size_minor_true'][sorted_dc2_idx],'totalSersicIndex':cdc2['morphology/totalSersicIndex'].to_numpy()[matched_indices],'position_angle_true':cdc2_other['position_angle_true'][sorted_dc2_idx], 'totalEllipticity':cdc2['morphology/totalEllipticity'].to_numpy()[matched_indices],'stellar_mass':cdc2['stellar_mass'].to_numpy()[matched_indices], 'SFRtot':cdc2['PZflowSFRtot'].to_numpy()[matched_indices],'Mag_true_g_sdss_z0':cdc2['Mag_true_g_sdss_z0'].to_numpy()[matched_indices],'GHOST_objID':ghost['objID'][save_array_uniques_neworder[:,1]], 'nn_distance':save_array_uniques_neworder[:,2]}
     
 save_df = pd.DataFrame(save_dict)
 save_df.to_csv('/global/cscratch1/sd/mlokken/sn_hostenv/cdc2_matched_ghost_{:s}_unq_zwgt_5pct_k{:d}.csv'.format(modestr, n_neigh), index=False)
