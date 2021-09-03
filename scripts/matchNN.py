@@ -34,8 +34,9 @@ else:
     tot = 5000
 
 def nn(gal):
-    u = AnnoyIndex(dimension, 'angular')
-    u.load('/global/cscratch1/sd/agaglian/build_cdc2.ann') # super fast, will just mmap the file
+    u = AnnoyIndex(dimension, 'euclidean')
+    #u.load('/global/cscratch1/sd/agaglian/build_cdc2.ann') # super fast, will just mmap the file
+    u.load("/global/cscratch1/sd/agaglian/build_cdc2_euclidean.ann")
 
     # Get nearest neighbours
     N = u.get_nns_by_vector(gal, n_neigh, search_k=-1, include_distances=True)
@@ -49,13 +50,19 @@ def min_max_normalize(feature, feature_name):
     plt.clf()
     return(norm_feature)
 
-fn = '/global/homes/a/agaglian/data_files/GHOST_restFrame_condenseLabels_0323.tar.gz'
+#fn = '/global/homes/a/agaglian/data_files/GHOST_restFrame_condenseLabels_0323.tar.gz'
+fn = "./ghost_scaled.csv"
 ghost_orig = pd.read_csv(fn, memory_map=True, low_memory=True)
+fn = '/global/homes/a/agaglian/data_files/GHOST_restFrame_condenseLabels_0323.tar.gz'
+ghost_full = pd.read_csv(fn, memory_map=True, low_memory=True)
+#og_ghost_idx = np.arange(len(ghost_full))
+#og_ghost_idx = ghost_orig['og_idx']
 
 #!/global/common/software/lsst/common/miniconda/current/envs/stack/bin/python
 # set mode: which class from which to match the hosts
 
-modes = np.array(['SN Ia', 'SN II', 'SLSN-I', 'SN IIP', 'SN IIb', 'SN IIn', 'SN Ib', 'SN Ic', 'SN Ibc'])
+#modes = np.array(['SN Ia', 'SN II', 'SLSN-I', 'SN IIP', 'SN IIb', 'SN IIn', 'SN Ib', 'SN Ic', 'SN Ibc'])
+modes = np.array(['SN Ia', 'SN II', 'SN Ibc'])
 
 # read in file of CosmoDC2 galaxies, with PZFlow SFR and redshifts, limited to abs r-band magnitude < -15
 # and -0.18 < i-z < 0.5
@@ -115,80 +122,85 @@ for mode in modes:
         ghost = ghost_orig[np.logical_or(np.logical_or(a,b),c)]
     else:
         ghost = ghost_orig[ghost_orig['TransientClass']==mode]
-    ghost.reset_index(inplace=True, drop=True)
-    print("Number of {:s}: {:d}".format(mode,len(ghost)))
-    transient_class = ghost['TransientClass']
-    gMag_G = ghost['gKronMag_SDSS_abs']
-    gMag_R = ghost['rKronMag_SDSS_abs']
-    gMag_I = ghost['iKronMag_SDSS_abs']
-    gMag_Z = ghost['zKronMag_SDSS_abs']
-    g_rshift = ghost['NED_redshift']
-    g_rshift2 = ghost['TransientRedshift']
-    g_ellip  = ghost['r_ellip']
-    g_gr   = ghost['g-r_SDSS_rest']
-    g_ri   = ghost['r-i_SDSS_rest']
-    g_iz   = ghost['i-z_SDSS_rest']
+    og_ghost_idx = ghost['og_idx'].values
 
-    # keep track of indices from original file
-    og_ghost_idx = np.arange(len(ghost))
-    keydata = np.vstack((gMag_G, gMag_R, gMag_I, gMag_Z, g_gr, g_ri, g_iz, g_ellip, g_rshift, g_rshift2)).T
-    # first remove all -999s:
-    keydata[np.logical_or(keydata<-50,keydata>100)] = np.nan
-    # get rid of redshifts with nan
-    delete_znans = []
-    z_nans = 0
-    for i in range(len(keydata)):
-        if np.isnan(keydata[i,8]):
-            z_nans += 1
-    for i in range(len(keydata)):
-        if np.isnan(keydata[i,8]):
-            # if transient redshift is not nan, replace with transient redshift
-            if not np.isnan(keydata[i,9]):
-                keydata[i,8] = keydata[i,9]
-            else:
-                delete_znans.append(i)
-        if keydata[i,8] <= 0:
-            delete_znans.append(i)
-    keydata = np.delete(keydata, delete_znans, axis=0)
-    og_ghost_idx = np.delete(og_ghost_idx, delete_znans)
-    delete_rows = []
-    # delete rows with more than one nan
-    for i in range(len(keydata)):
-        if np.isnan(np.sum(keydata[i])):
-            nan_counter = 0
-            for j in range(1, len(keydata[i])):
-                if np.isnan(keydata[i,j]):
-                    nan_counter+=1
-            if nan_counter > 1:
-                delete_rows.append(i)
-    keydata = np.delete(keydata, delete_rows, axis=0)
-    og_ghost_idx = np.delete(og_ghost_idx, delete_rows)
-    # finally for rows with just one nan, replace with the average value
-    for i in range(len(keydata)):
-        if np.isnan(np.sum(keydata[i])):
-            for j in range(1, len(keydata[i])):
-                if np.isnan(keydata[i,j]):
-                    keydata[i,j] = np.nanmean(keydata[:,j])
-    gG = keydata[:,0]
-    gR = keydata[:,1]
-    gI = keydata[:,2]
-    gZ = keydata[:,3]
-    g_gr = keydata[:,4]
-    g_ri   = keydata[:,5]
-    g_iz   = keydata[:,6]
-    g_ellip = keydata[:,7]
-    g_rshift = keydata[:,8]
+    #ghost.reset_index(inplace=True, drop=True)
+    #print("Number of {:s}: {:d}".format(mode,len(ghost)))
+    #transient_class = ghost['TransientClass']
+    #gMag_G = ghost['gKronMag_SDSS_abs']
+    #gMag_R = ghost['rKronMag_SDSS_abs']
+    #gMag_I = ghost['iKronMag_SDSS_abs']
+    #gMag_Z = ghost['zKronMag_SDSS_abs']
+    #g_rshift = ghost['NED_redshift']
+    #g_rshift2 = ghost['TransientRedshift']
+    #g_ellip  = ghost['r_ellip']
+    #g_gr   = ghost['g-r_SDSS_rest']
+    #g_ri   = ghost['r-i_SDSS_rest']
+    #g_iz   = ghost['i-z_SDSS_rest']
 
-    data_keyparams= np.vstack((gR, gI, g_gr, g_iz, g_ellip, g_rshift)).T
+    ## keep track of indices from original file
+    #og_ghost_idx = np.arange(len(ghost))
+    #keydata = np.vstack((gMag_G, gMag_R, gMag_I, gMag_Z, g_gr, g_ri, g_iz, g_ellip, g_rshift, g_rshift2)).T
+    ## first remove all -999s:
+    #keydata[np.logical_or(keydata<-50,keydata>100)] = np.nan
+    ## get rid of redshifts with nan
+    #delete_znans = []
+    #z_nans = 0
+    #for i in range(len(keydata)):
+    #    if np.isnan(keydata[i,8]):
+    #        z_nans += 1
+    #for i in range(len(keydata)):
+    #    if np.isnan(keydata[i,8]):
+    #        # if transient redshift is not nan, replace with transient redshift
+    #        if not np.isnan(keydata[i,9]):
+    #            keydata[i,8] = keydata[i,9]
+    #        else:
+    #            delete_znans.append(i)
+    #    if keydata[i,8] <= 0:
+    #        delete_znans.append(i)
+    #keydata = np.delete(keydata, delete_znans, axis=0)
+    #og_ghost_idx = np.delete(og_ghost_idx, delete_znans)
+    #delete_rows = []
+    ## delete rows with more than one nan
+    #for i in range(len(keydata)):
+    #    if np.isnan(np.sum(keydata[i])):
+    #        nan_counter = 0
+    #        for j in range(1, len(keydata[i])):
+    #            if np.isnan(keydata[i,j]):
+    #                nan_counter+=1
+    #        if nan_counter > 1:
+    #            delete_rows.append(i)
+    #keydata = np.delete(keydata, delete_rows, axis=0)
+    #og_ghost_idx = np.delete(og_ghost_idx, delete_rows)
+    ## finally for rows with just one nan, replace with the average value
+    #for i in range(len(keydata)):
+    #    if np.isnan(np.sum(keydata[i])):
+    #        for j in range(1, len(keydata[i])):
+    #            if np.isnan(keydata[i,j]):
+    #                keydata[i,j] = np.nanmean(keydata[:,j])
+    #gG = keydata[:,0]
+    #gR = keydata[:,1]
+    #gI = keydata[:,2]
+    #gZ = keydata[:,3]
+    #g_gr = keydata[:,4]
+    #g_ri   = keydata[:,5]
+    #g_iz   = keydata[:,6]
+    #g_ellip = keydata[:,7]
+    #g_rshift = keydata[:,8]
 
-    # normalize for knn
-    # The purpose of is this is so that the nearest-neighbors algorithm is searching in a multidimensional space
-    # where typical distances are similar in all dimensions
-    #ghost_cdc2 = np.vstack((data_keyparams, sim_keyparams))
-    scaler = StandardScaler()
-    #scaler.fit(ghost_cdc2)
-    scaler.fit(data_keyparams)
-    data_keyparams_norm = scaler.transform(data_keyparams)
+    #data_keyparams= np.vstack((gR, gI, g_gr, g_iz, g_ellip, g_rshift)).T
+
+    ## normalize for knn
+    ## The purpose of is this is so that the nearest-neighbors algorithm is searching in a multidimensional space
+    ## where typical distances are similar in all dimensions
+    ##ghost_cdc2 = np.vstack((data_keyparams, sim_keyparams))
+    #scaler = StandardScaler()
+    ##scaler.fit(ghost_cdc2)
+    #scaler.fit(data_keyparams)
+    #data_keyparams_norm = scaler.transform(data_keyparams)
+    data_keyparams_norm = np.array(ghost[['R', 'I', 'g-r', 'i-z', 'ellipticity', 'redshift']])
+    #load up the ghost database here!! 
+
     #data_keyparams_norm = keyparams_norm[0:len(data_keyparams[:,0]),:]
     #sim_keyparams_norm  = keyparams_norm[len(data_keyparams[:,0]):,:]
 
@@ -247,15 +259,15 @@ for mode in modes:
     matched_indices = save_array_uniques[:,0].astype(int)
     cdc2_matched = cdc2.iloc[matched_indices]
     galaxy_ids = cdc2_matched['galaxy_id']
-    nn_dict = {'GHOST_objID':ghost['objID'].to_numpy()[save_array_uniques[:,1].astype(int)], 'nn_distance':save_array_uniques[:,2]}
+    nn_dict = {'GHOST_objID':ghost_full['objID'].to_numpy()[save_array_uniques[:,1].astype(int)], 'nn_distance':save_array_uniques[:,2]}
     nn_df   = pd.DataFrame(nn_dict)
     nn_df.reset_index(inplace=True, drop=True)
     cdc2_matched.reset_index(inplace=True, drop=True)
     cdc2_matched_nn = pd.concat([cdc2_matched, nn_df], axis=1)
     cdc2_matched_nn.reset_index(inplace=True, drop=True)
-    cdc2_matched_nn.to_csv("/global/cscratch1/sd/agaglian/matchedDC2_%s_%i.tar.gz" % (modestr, n_neigh), index=False)
+    cdc2_matched_nn.to_csv("/global/cscratch1/sd/agaglian/matchedDC2_euclid_%s_%i.tar.gz" % (modestr, n_neigh), index=False)
 
-        if plotting:
+    if plotting:
         if not os.path.exists('../plots/{:s}'.format(modestr)):
             os.mkdir('../plots/{:s}'.format(modestr))
         sns.set_context("poster")

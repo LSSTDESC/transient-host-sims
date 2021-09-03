@@ -1,0 +1,49 @@
+/global/homes/a/agaglian/.snana: line 11: setSNANA: command not found
+Sun Aug 29 08:15:26 PDT 2021
+INFO: activate-binutils_linux-cos6-x86_64.sh made the following environmental changes:
++ADDR2LINE=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-addr2line
++AR=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-ar
++AS=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-as
++CHOST=x86_64-sarc-linux-gnu
++CXXFILT=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-c++filt
++ELFEDIT=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-elfedit
++GPROF=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-gprof
++LD=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-ld
++NM=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-nm
++OBJCOPY=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-objcopy
++OBJDUMP=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-objdump
++RANLIB=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-ranlib
++READELF=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-readelf
++SIZE=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-size
++STRINGS=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-strings
++STRIP=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-strip
+-ADDR2LINE=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-addr2line
+-AR=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-ar
+-AS=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-as
+-CXXFILT=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-c++filt
+-ELFEDIT=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-elfedit
+-GPROF=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-gprof
+-LD=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-ld
+-NM=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-nm
+-OBJCOPY=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-objcopy
+-OBJDUMP=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-objdump
+-RANLIB=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-ranlib
+-READELF=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-readelf
+-SIZE=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-size
+-STRINGS=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-strings
+-STRIP=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-strip
+INFO: activate-gcc_linux-cos6-x86_64.sh made the following environmental changes:
++CC=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-cc
++CPP=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-cpp
++GCC=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-gcc
++GCC_AR=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-gcc-ar
++GCC_NM=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-gcc-nm
++GCC_RANLIB=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-sarc-linux-gnu-gcc-ranlib
+-CC=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-cc
+-CPP=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-cpp
+-GCC=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-gcc
+-GCC_AR=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-gcc-ar
+-GCC_NM=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-gcc-nm
+-GCC_RANLIB=/global/homes/a/agaglian/.conda/envs/elasticc/bin/x86_64-conda_cos6-linux-gnu-gcc-ranlib
+/var/spool/slurmd/job46204292/slurm_script: line 17: 53093 Segmentation fault      python buildANN.py
+Sun Aug 29 10:03:27 PDT 2021
