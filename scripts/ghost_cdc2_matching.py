@@ -251,13 +251,14 @@ cdc2_nbrs_pz = pd.merge(cdc2_nbrs, cdc2_pz, on=["galaxy_id"], how='left')
 
 print(cdc2_nbrs_pz)
 # save it all
-save_dict = {
+cdc2_nbrs_pz.to_csv('/global/cscratch1/sd/mlokken/sn_hostenv/cdc2_matched_ghost_{:s}_unq_zwgt_5pct_k{:d}.csv'.format(modestr, n_neigh), index=False)
+# save_dict = {
 
-'galaxy_id':cdc2_nbrs_pz['galaxy_id'], 'ra':cdc2_nbrs_pz['ra'],'dec':cdc2_nbrs_pz['dec'], 'redshift':cdc2_nbrs_pz['PZflowredshift'], 'mag_true_u_lsst':cdc2_other['mag_true_u_lsst'][sorted_dc2_idx], 'mag_err_u_photoz':cdc2_other['mag_err_u_photoz'][sorted_dc2_idx],
-    'mag_true_g_lsst':cdc2_other['mag_true_g_lsst'][sorted_dc2_idx], 'mag_err_g_photoz':cdc2_other['mag_err_g_photoz'][sorted_dc2_idx],'mag_true_r_lsst':cdc2_other['mag_true_r_lsst'][sorted_dc2_idx],'mag_err_r_photoz':cdc2_other['mag_err_r_photoz'][sorted_dc2_idx], 'mag_true_i_lsst':cdc2_other['mag_true_i_lsst'][sorted_dc2_idx],'mag_err_i_photoz':cdc2_other['mag_err_i_photoz'][sorted_dc2_idx], 'mag_true_z_lsst':cdc2_other['mag_true_z_lsst'][sorted_dc2_idx],'mag_err_z_photoz':cdc2_other['mag_err_z_photoz'][sorted_dc2_idx], 'mag_true_Y_lsst':cdc2_other['mag_true_Y_lsst'][sorted_dc2_idx],'mag_err_y_photoz':cdc2_other['mag_err_y_photoz'][sorted_dc2_idx],'size_true':cdc2_other['size_true'][sorted_dc2_idx],'size_minor_true':cdc2_other['size_minor_true'][sorted_dc2_idx],'totalSersicIndex':cdc2['morphology/totalSersicIndex'].to_numpy()[matched_indices],'position_angle_true':cdc2_other['position_angle_true'][sorted_dc2_idx], 'totalEllipticity':cdc2['morphology/totalEllipticity'].to_numpy()[matched_indices],'stellar_mass':cdc2['stellar_mass'].to_numpy()[matched_indices], 'SFRtot':cdc2['PZflowSFRtot'].to_numpy()[matched_indices],'Mag_true_g_sdss_z0':cdc2['Mag_true_g_sdss_z0'].to_numpy()[matched_indices],'GHOST_objID':ghost['objID'][save_array_uniques_neworder[:,1]], 'nn_distance':save_array_uniques_neworder[:,2]}
+# 'galaxy_id':cdc2_nbrs_pz['galaxy_id'], 'ra':cdc2_nbrs_pz['ra'],'dec':cdc2_nbrs_pz['dec'], 'redshift':cdc2_nbrs_pz['PZflowredshift'], 'mag_true_u_lsst':cdc2_other['mag_true_u_lsst'][sorted_dc2_idx], 'mag_err_u_photoz':cdc2_other['mag_err_u_photoz'][sorted_dc2_idx],
+#     'mag_true_g_lsst':cdc2_other['mag_true_g_lsst'][sorted_dc2_idx], 'mag_err_g_photoz':cdc2_other['mag_err_g_photoz'][sorted_dc2_idx],'mag_true_r_lsst':cdc2_other['mag_true_r_lsst'][sorted_dc2_idx],'mag_err_r_photoz':cdc2_other['mag_err_r_photoz'][sorted_dc2_idx], 'mag_true_i_lsst':cdc2_other['mag_true_i_lsst'][sorted_dc2_idx],'mag_err_i_photoz':cdc2_other['mag_err_i_photoz'][sorted_dc2_idx], 'mag_true_z_lsst':cdc2_other['mag_true_z_lsst'][sorted_dc2_idx],'mag_err_z_photoz':cdc2_other['mag_err_z_photoz'][sorted_dc2_idx], 'mag_true_Y_lsst':cdc2_other['mag_true_Y_lsst'][sorted_dc2_idx],'mag_err_y_photoz':cdc2_other['mag_err_y_photoz'][sorted_dc2_idx],'size_true':cdc2_other['size_true'][sorted_dc2_idx],'size_minor_true':cdc2_other['size_minor_true'][sorted_dc2_idx],'totalSersicIndex':cdc2['morphology/totalSersicIndex'].to_numpy()[matched_indices],'position_angle_true':cdc2_other['position_angle_true'][sorted_dc2_idx], 'totalEllipticity':cdc2['morphology/totalEllipticity'].to_numpy()[matched_indices],'stellar_mass':cdc2['stellar_mass'].to_numpy()[matched_indices], 'SFRtot':cdc2['PZflowSFRtot'].to_numpy()[matched_indices],'Mag_true_g_sdss_z0':cdc2['Mag_true_g_sdss_z0'].to_numpy()[matched_indices],'GHOST_objID':ghost['objID'][save_array_uniques_neworder[:,1]], 'nn_distance':save_array_uniques_neworder[:,2]}
     
-save_df = pd.DataFrame(save_dict)
-save_df.to_csv('/global/cscratch1/sd/mlokken/sn_hostenv/cdc2_matched_ghost_{:s}_unq_zwgt_5pct_k{:d}.csv'.format(modestr, n_neigh), index=False)
+# save_df = pd.DataFrame(save_dict)
+# save_df.to_csv('/global/cscratch1/sd/mlokken/sn_hostenv/cdc2_matched_ghost_{:s}_unq_zwgt_5pct_k{:d}.csv'.format(modestr, n_neigh), index=False)
 
 if plotting:
     if not os.path.exists('../plots/{:s}'.format(modestr)):
