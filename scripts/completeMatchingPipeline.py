@@ -148,14 +148,14 @@ for mode in modes:
     if mode == 'SN II':
         a = ghost_orig['TransientClass']==mode
         b = ghost_orig['TransientClass']=='SN IIP'
-        c = ghost_orig['TransientClass']=='SN IIb'
-        d = ghost_orig['TransientClass']=='SN IIn'
-        ghost = ghost_orig[np.logical_or(np.logical_or(np.logical_or(a,b),c), d)]
-    elif mode == 'SN Ibc':
+        c = ghost_orig['TransientClass']=='SN IIn'
+        ghost = ghost_orig[a|b|c]
+    elif mode == 'SN Ibc': # group all stripped-envelope supernovae
         a = ghost_orig['TransientClass'] == 'SN Ib'
-        b = ghost_orig['TransientClass'] == 'SN Ic'
-        c = ghost_orig['TransientClass'] == 'SLSN-I' # lump in SLSN hosts because there are too few of them for it to be its own hostlib
-        ghost = ghost_orig[np.logical_or(np.logical_or(a,b),c)]
+        b = ghost_orig['TransientClass']=='SN IIb'
+        c = ghost_orig['TransientClass'] == 'SN Ic'
+        d = ghost_orig['TransientClass'] == 'SLSN-I' # lump in SLSN hosts because there are too few of them for it to be its own hostlib
+        ghost = ghost_orig[a | b | c | d]
     else:
         ghost = ghost_orig[ghost_orig['TransientClass']==mode]
     ghost.reset_index(inplace=True, drop=True)
