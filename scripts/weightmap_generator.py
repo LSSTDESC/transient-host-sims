@@ -274,7 +274,12 @@ def RateIc(Msol, SFR):
     cond1 = np.log10(sSFR) >= -11.5
     rate[cond1] = Msol[cond1]**0.36
     rate2 = R_SNIc_metal(Msol, SFR)
+    #DEBUGGING PURPOSES ONLY
+    rate2 /= np.nanmax(rate2)
+    rate /= np.nanmax(rate)
     rate_comb = rate*rate2
+    #return rate, rate2, rate_comb
+    #return rate2/np.nanmax(rate2)
     return rate_comb
 
 def RateIc_BL(Msol, SFR):
@@ -283,8 +288,12 @@ def RateIc_BL(Msol, SFR):
     cond1 = np.log10(sSFR) >= -11.5
     rate[cond1] = Msol[cond1]**0.36
     rate2 = R_SNIc_BL_metal(Msol, SFR)
+    rate2 /= np.nanmax(rate2)
+    rate /= np.nanmax(rate)
     rate_comb = rate*rate2
+    #return rate, rate2, rate_comb
     return rate_comb
+    #return rate2/np.nanmax(rate2)
 
 def RateIb(Msol, SFR):
     rate = np.zeros(len(Msol))
@@ -309,7 +318,6 @@ def RateTDE(Msol, SFR):
 
 def RateAGN(Msol):
     return norm.pdf(np.log10(Msol), loc=10.8, scale=0.5)
-
 
 def RateSLSNI(Msol, SFR):
     #from https://arxiv.org/pdf/2012.07180.pdf
@@ -346,6 +354,7 @@ def RateIa(Msol, SFR, x1):
     return R_AB_kde(Msol, SFR)*Rstar(x1, Msol)
 
 
+
 #######################################################################################################################################################
 ############                                    Make and save the weightmap files                                                                   ###
 #######################################################################################################################################################
@@ -357,7 +366,7 @@ sPath = '/Users/alexgagliano/Documents/Research/DESC/tables/WGTMAPs/'
 #rate_allMesh_91bg = Rate91bg(mass_allMesh, SFR_allMesh, x1_allMesh)
 #rate_allMesh_TDE = RateTDE(mass_allMesh, SFR_allMesh)
 #rate_allMesh_II = RateII(mass_allMesh, SFR_allMesh)
-#rate_allMesh_Ib = RateIb(mass_allMesh, SFR_allMesh)
+rate_allMesh_Ib = RateIb(mass_allMesh, SFR_allMesh)
 rate_allMesh_Ic = RateIc(mass_allMeshIc, SFR_allMeshIc)
 rate_allMesh_Ic_BL = RateIc_BL(mass_allMeshIc, SFR_allMeshIc)
 #rate_allMesh_SLSNI = RateSLSNI(mass_allMesh, SFR_allMesh)
@@ -369,42 +378,43 @@ weight_prefixAGN = np.array(['WGT:']*len(logmass_allMeshAGN))
 
 snmagshift = np.zeros(len(logmass_allMesh))
 snmagshift_AGN = np.zeros(len(logmass_allMeshAGN))
-snmagshift_TDE = np.zeros(len(logmass_allMeshTDE))
+snmagshift_Ic = np.zeros(len(logmass_allMeshIc))
+#snmagshift_TDE = np.zeros(len(logmass_allMeshTDE))
 
 #WGTMAP_Ia = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefix, 'LOGMASS':logmass_allMesh, 'LOG_SFR':np.log10(SFR_allMesh), 'x1':x1_allMesh,'WGT':rate_allMesh_Ia, 'SNMAGSHIFT':snmagshift})
-#WGTMAP_Ia.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SNIa_GHOST_Smith.WGTMAP",index=False, float_format='%.3f', sep=' ')
+#WGTMAP_Ia.to_csv(sPath + "/SNIa_GHOST_Smith.WGTMAP",index=False, float_format='%.3f', sep=' ')
 
 #WGTMAP_Iax = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefix, 'LOGMASS':logmass_allMesh, 'LOG_SFR':np.log10(SFR_allMesh), 'x1':x1_allMesh,'WGT':rate_allMesh_Iax, 'SNMAGSHIFT':snmagshift})
-#WGTMAP_Iax.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SNIax_GHOST_Smith.WGTMAP",index=False, float_format='%.3f', sep=' ')
+#WGTMAP_Iax.to_csv(sPath + "/SNIax_GHOST_Smith.WGTMAP",index=False, float_format='%.3f', sep=' ')
 
 #WGTMAP_91bg = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefix, 'LOGMASS':logmass_allMesh, 'LOG_SFR':np.log10(SFR_allMesh), 'x1':x1_allMesh,'WGT':rate_allMesh_91bg, 'SNMAGSHIFT':snmagshift})
-#WGTMAP_91bg.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SN91bg_GHOST_Smith.WGTMAP",index=False, float_format='%.3f', sep=' ')
+#WGTMAP_91bg.to_csv(sPath + "/SN91bg_GHOST_Smith.WGTMAP",index=False, float_format='%.3f', sep=' ')
 
 #WGTMAP_II = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefix, 'LOGMASS':logmass_allMesh, 'LOG_SFR':np.log10(SFR_allMesh),'WGT':rate_allMesh_II, 'SNMAGSHIFT':snmagshift})
-#WGTMAP_II.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SNII_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
+#WGTMAP_II.to_csv(sPath + "/SNII_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
 
-#WGTMAP_Ib = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefix, 'LOGMASS':logmass_allMesh, 'LOG_SFR':np.log10(SFR_allMesh),'WGT':rate_allMesh_Ib})
-#WGTMAP_Ib.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SNIb_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
+WGTMAP_Ib = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefix, 'LOGMASS':logmass_allMesh, 'LOG_SFR':np.log10(SFR_allMesh),'WGT':rate_allMesh_Ib, 'SNMAGSHIFT':snmagshift})
+WGTMAP_Ib.to_csv(sPath + "/SNIb_GHOST_MAGSHIFT.WGTMAP",index=False, float_format='%.3e', sep=' ')
 
 #WGTMAP_Ic = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefixIc, 'LOGMASS':logmass_allMeshIc, 'LOG_SFR':np.log10(SFR_allMeshIc), 'Mag_true_g_sdss_z0': Mg_allMesh, 'g_obs':g_allMesh, 'r_obs':r_allMesh, 'WGT':rate_allMesh_Ic})
-WGTMAP_Ic = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefixIc, 'LOGMASS':logmass_allMeshIc, 'LOG_SFR':np.log10(SFR_allMeshIc), 'WGT':rate_allMesh_Ic})
-WGTMAP_Ic.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SNIc_GHOST_EXAGG_FMR.WGTMAP",index=False, sep=' ')#float_format='%.3f',
+WGTMAP_Ic = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefixIc, 'LOGMASS':logmass_allMeshIc, 'LOG_SFR':np.log10(SFR_allMeshIc), 'WGT':rate_allMesh_Ic, 'SNMAGSHIFT':snmagshift_Ic})
+WGTMAP_Ic.to_csv(sPath + "/SNIc_GHOST_MAGSHIFT.WGTMAP",index=False, float_format='%.3e', sep=' ')#float_format='%.3f',
 
 #WGTMAP_Ic_BL = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefixIc, 'LOGMASS':logmass_allMeshIc, 'LOG_SFR':np.log10(SFR_allMeshIc),'Mag_true_g_sdss_z0': Mg_allMesh, 'g_obs':g_allMesh, 'r_obs':r_allMesh, 'WGT':rate_allMesh_Ic_BL})
-WGTMAP_Ic_BL = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefixIc, 'LOGMASS':logmass_allMeshIc, 'LOG_SFR':np.log10(SFR_allMeshIc), 'WGT':rate_allMesh_Ic_BL})
-WGTMAP_Ic_BL.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SNIcBL_GHOST_EXAGG_FMR.WGTMAP",index=False, sep=' ') #float_format='%.3f',
+WGTMAP_Ic_BL = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefixIc, 'LOGMASS':logmass_allMeshIc, 'LOG_SFR':np.log10(SFR_allMeshIc), 'WGT':rate_allMesh_Ic_BL, 'SNMAGSHIFT':snmagshift_Ic})
+WGTMAP_Ic_BL.to_csv(sPath + "/SNIcBL_GHOST_MAGSHIFT.WGTMAP",float_format='%.3e', index=False, sep=' ') #float_format='%.3f',
 
 #WGTMAP_Ic_BL = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefixIc, 'LOGMASS':logmass_allMeshIc, 'LOG_SFR':np.log10(SFR_allMeshIc),'M_g': Mg_allMesh, 'g_obs':g_allMesh, 'r_obs':r_allMesh, 'WGT':rate_allMesh_Ic_BL})
-#WGTMAP_Ic_BL.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SNIcBL_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
+#WGTMAP_Ic_BL.to_csv(sPath + "/SNIcBL_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
 
 #WGTMAP_AGN = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefixAGN, 'LOGMASS':logmass_allMeshAGN,'WGT':rate_allMesh_AGN, 'SNMAGSHIFT':snmagshift_AGN})
-#WGTMAP_AGN.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/AGN_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
+#WGTMAP_AGN.to_csv(sPath + "/AGN_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
 
 #WGTMAP_TDE = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefix, 'LOGMASS':logmass_allMesh,'LOG_SFR':np.log10(SFR_allMesh),'WGT':rate_allMesh_TDE, 'SNMAGSHIFT':snmagshift})
-#WGTMAP_TDE.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/TDE_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
+#WGTMAP_TDE.to_csv(sPath + "/TDE_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
 
 #WGTMAP_SLSNI = pd.DataFrame({'VARNAMES_WGTMAP:':weight_prefix, 'LOGMASS':logmass_allMesh, 'LOG_SFR':np.log10(SFR_allMesh),'WGT':rate_allMesh_SLSNI, 'SNMAGSHIFT':snmagshift})
-#WGTMAP_SLSNI.to_csv("/Users/alexgagliano/Documents/Research/DESC/tables/SLSNI_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
+#WGTMAP_SLSNI.to_csv(sPath + "/SLSNI_GHOST.WGTMAP",index=False, float_format='%.3f', sep=' ')
 
 #######################################################################################################################################################
 ############                       Make diagnostic plots to validate the weightmaps                                                                 ###
