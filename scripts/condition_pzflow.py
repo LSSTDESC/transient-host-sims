@@ -60,24 +60,23 @@ data_subset = data.sample(n=int(len(data)/5.e2))
 print('Training on {} CosmoDC2 galaxies.'.format(len(data_subset)))
 conditional_columns = data_subset.columns.drop(['redshift', 'logSFRtot'])
 latent = Joint(Uniform((-3,3)), Normal(1))
-means = np.array([0.5, data_subset['logSFRtot'].mean()])
-stds = np.array([1/5.9, data_subset['logSFRtot'].std()]) #switched 1/6 to 1/5.9
+means = np.array([data_subset['redshift'].mean(), data_subset['logSFRtot'].mean()])
+stds = np.array([data_subset['redshift'].std(), data_subset['logSFRtot'].std()]) #switched 1/6 to 1/5.9
 bijector = Chain(
     StandardScaler(means, stds),
     RollingSplineCoupling(nlayers=2, n_conditions=len(conditional_columns)),
 )
+# To create the conditional flow, we have to provide
+# 1. The names of the data columns
+# 2. The bijector
+# 3. The names of the conditional columns
+
 flow = Flow(
     data_columns = ("redshift", "logSFRtot"),
     conditional_columns = conditional_columns,
     bijector = bijector,
     latent = latent,          
 )
-
-# To create the conditional flow, we have to provide
-# 1. The names of the data columns
-# 2. The bijector
-# 3. The names of the conditional columns
-flow = Flow(['redshift', 'logSFRtot'], bijector, conditional_columns=conditional_columns)
 
 losses = flow.train(data_subset, epochs=30, verbose=True)
 
