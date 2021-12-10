@@ -29,7 +29,7 @@ if full:
 else:
     tot = 5000
 
-fn = '/global/homes/a/agaglian/data_files/GHOST_restFrame_condenseLabels_0323.tar.gz'
+fn = '/global/cscratch1/sd/mlokken/sn_hostenv/GHOSTwithImageSizes.csv'
 ghost = pd.read_csv(fn)
 
 transient_class = ghost['TransientClass']
@@ -39,14 +39,15 @@ gMag_I = ghost['iKronMag_SDSS_abs']
 gMag_Z = ghost['zKronMag_SDSS_abs']
 g_rshift = ghost['NED_redshift']
 g_rshift2 = ghost['TransientRedshift']
-g_ellip  = ghost['r_ellip']
+#g_ellip  = ghost['r_ellip']
 g_gr   = ghost['g-r_SDSS_rest']
 g_ri   = ghost['r-i_SDSS_rest']
 g_iz   = ghost['i-z_SDSS_rest']
+g_Rkpc = np.average([ghost['gR_kpc'], ghost['rR_kpc'], ghost['iR_kpc'], ghost['zR_kpc'], ghost['yR_kpc']]) # radius in kpc, averaged across bands
 
 # keep track of indices from original file
 og_ghost_idx = np.arange(len(ghost))
-keydata = np.vstack((gMag_G, gMag_R, gMag_I, gMag_Z, g_gr, g_ri, g_iz, g_ellip, g_rshift, g_rshift2)).T
+keydata = np.vstack((gMag_G, gMag_R, gMag_I, gMag_Z, g_gr, g_ri, g_iz, g_Rkpc, g_rshift, g_rshift2)).T
 # first remove all -999s:
 keydata[np.logical_or(keydata<-50,keydata>100)] = np.nan
 # get rid of redshifts with nan
@@ -92,7 +93,7 @@ gZ = keydata[:,3]
 g_gr = keydata[:,4]
 g_ri   = keydata[:,5]
 g_iz   = keydata[:,6]
-g_ellip = keydata[:,7]
+g_Rkpc = keydata[:,7]
 g_rshift = keydata[:,8]
 ghost_objIDs = ghost['objID'].values[og_ghost_idx]
 
@@ -118,11 +119,12 @@ cI = cI.loc[keep]
 cZ = cZ.loc[keep]
 c_iz = c_iz.loc[keep]
 c_gr = cG-cR
-c_ellip = cdc2['morphology/totalEllipticity']
+# c_ellip = cdc2['morphology/totalEllipticity']
 c_rshift = cdc2['PZflowredshift']
+c_rkpc   = cdc2['R_kpc']
 
-sim_keyparams= np.vstack((cR, cI, c_gr, c_iz, c_ellip, c_rshift)).T
-data_keyparams= np.vstack((gR, gI, g_gr, g_iz, g_ellip, g_rshift)).T
+sim_keyparams= np.vstack((cR, cI, c_gr, c_iz, c_Rkpc, c_rshift)).T
+data_keyparams= np.vstack((gR, gI, g_gr, g_iz, g_Rkpc, g_rshift)).T
 
 # The purpose of is this is so that the nearest-neighbors algorithm is searching in a multidimensional space
 # where typical distances are similar in all dimensions
@@ -137,8 +139,8 @@ div = 20.
 data_keyparams_norm[:,5]/=div
 sim_keyparams_norm[:,5]/=div
 
-ghost_scaled = pd.DataFrame(data=data_keyparams_norm, columns=['R', 'I', 'g-r', 'i-z', 'ellipticity', 'redshift'])
-dc2_scaled = pd.DataFrame(data=sim_keyparams_norm, columns=['R', 'I', 'g-r', 'i-z', 'ellipticity', 'redshift'])
+ghost_scaled = pd.DataFrame(data=data_keyparams_norm, columns=['R', 'I', 'g-r', 'i-z', 'R_kpc', 'redshift'])
+dc2_scaled = pd.DataFrame(data=sim_keyparams_norm, columns=['R', 'I', 'g-r', 'i-z', 'R_kpc', 'redshift'])
 ghost_scaled['TransientClass'] = transient_class
 ghost_scaled['objID'] = ghost_objIDs
 ghost_scaled['og_idx'] = og_ghost_idx

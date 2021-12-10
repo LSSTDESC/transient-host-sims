@@ -123,10 +123,10 @@ cI = cI.loc[keep]
 cZ = cZ.loc[keep]
 c_iz = c_iz.loc[keep]
 c_gr = cG-cR
-c_ellip = cdc2['morphology/totalEllipticity']
+c_Rkpc = cdc2['R_kpc']
 c_rshift = cdc2['PZflowredshift']
 
-sim_keyparams= np.vstack((cR, cI, c_gr, c_iz, c_ellip, c_rshift)).T
+sim_keyparams= np.vstack((cR, cI, c_gr, c_iz, c_Rkpc, c_rshift)).T
 
 div = 20.
 percentage = 1/div*100
@@ -167,14 +167,15 @@ for mode in modes:
     gMag_Z = ghost['zKronMag_SDSS_abs']
     g_rshift = ghost['NED_redshift']
     g_rshift2 = ghost['TransientRedshift']
-    g_ellip  = ghost['r_ellip']
+    #g_ellip  = ghost['r_ellip']
     g_gr   = ghost['g-r_SDSS_rest']
     g_ri   = ghost['r-i_SDSS_rest']
     g_iz   = ghost['i-z_SDSS_rest']
+    g_Rkpc = np.average(ghost['gR_kpc'], ghost['rR_kpc'], ghost['iR_kpc'], ghost['zR_kpc'], ghost['yR_kpc']) # radius in kpc, averaged across bands
 
     # keep track of indices from original file
     og_ghost_idx = np.arange(len(ghost))
-    keydata = np.vstack((gMag_G, gMag_R, gMag_I, gMag_Z, g_gr, g_ri, g_iz, g_ellip, g_rshift, g_rshift2)).T
+    keydata = np.vstack((gMag_G, gMag_R, gMag_I, gMag_Z, g_gr, g_ri, g_iz, g_Rkpc, g_rshift, g_rshift2)).T
     # first remove all -999s:
     keydata[np.logical_or(keydata<-50,keydata>100)] = np.nan
     # get rid of redshifts with nan
@@ -219,10 +220,10 @@ for mode in modes:
     g_gr = keydata[:,4]
     g_ri   = keydata[:,5]
     g_iz   = keydata[:,6]
-    g_ellip = keydata[:,7]
+    g_Rkpc = keydata[:,7]
     g_rshift = keydata[:,8]
 
-    data_keyparams= np.vstack((gR, gI, g_gr, g_iz, g_ellip, g_rshift)).T
+    data_keyparams= np.vstack((gR, gI, g_gr, g_iz, g_Rkpc, g_rshift)).T
 
     # normalize for knn
     # The purpose of is this is so that the nearest-neighbors algorithm is searching in a multidimensional space
@@ -347,7 +348,7 @@ for mode in modes:
         plt.savefig("../plots/{0}/cdc2_ghost_{0}_k10_lowz_weighting_matches_unq_histogram.png".format(modestr))
 
         # check all properties against each other for CosmoDC2
-        labels=['R', 'I', 'g-r', 'i-z', 'ellipticity', 'redshift']
+        labels=['R', 'I', 'g-r', 'i-z', 'R_kpc', 'redshift']
         lims =[[-25,-14.5],[-25,-14.5],[-0.3,1.2],[-0.2,0.5],[0,0.4],[0,1]]
         for i in range(6):
             for j in range(6):
@@ -368,7 +369,8 @@ for mode in modes:
                     ax[1].set_xlim(lims[j])
                     ax[1].set_ylim(lims[i])
                     ax[0].set_ylim(lims[i])
-                    plt.savefig("../plots/{:s}/ghost_cdc2_k10_lowz_weighting_unq_{:s}_vs_{:s}_{:s}.png".format(modestr,labels[i],labels[j],modestr), bbox_inches='tight')
+                    
+        plt.savefig("../plots/{:s}/ghost_cdc2_k10_lowz_weighting_unq_{:s}_vs_{:s}_{:s}.png".format(modestr,labels[i],labels[j],modestr), bbox_inches='tight')
                     plt.clf()
 
 end = time.time()

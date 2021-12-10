@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import pzflow
 from pzflow import Flow
 from pzflow.bijectors import Chain, ColorTransform, InvSoftplus, StandardScaler, RollingSplineCoupling
-from pzflow.examples import galaxy_data
 from pzflow.distributions import Uniform, Joint, Normal
 import pandas as pd
 import GCRCatalogs
@@ -32,7 +31,7 @@ plotting = True
 # load in CosmoDC2 catalog
 cosmo=GCRCatalogs.load_catalog("cosmoDC2_v1.1.4_image")
 quantities = ['galaxy_id', 'redshift', 'Mag_true_g_sdss_z0', 'Mag_true_r_sdss_z0', 'Mag_true_i_sdss_z0', 'Mag_true_z_sdss_z0', 'stellar_mass', 'totalStarFormationRate']
-filters = ['mag_true_r_lsst<28']
+# filters = ['mag_true_r_lsst<28']
 # 
 logsfrtot = []
 redshift  = []
@@ -45,30 +44,31 @@ galid = []
 #ellip = []
 
 subselect = False
+c=0
 for healpix in cosmo.available_healpix_pixels:
     print(healpix)
-    gal = cosmo.get_quantities(quantities, filters=filters, native_filters=f"healpix_pixel == {healpix}")
+    gal = cosmo.get_quantities(quantities, native_filters=f"healpix_pixel == {healpix}")
 
-    if c<1:
-#    if c<39:
-        logsfrtot.append(np.log10(gal['totalStarFormationRate']))
-        redshift.append(gal['redshift'])
-        print(max(gal['redshift']))
-        # sample = onp.random.choice(len(gal['redshift']), size=100)
-        # plt.plot(gal['ra'][sample], gal['dec'][sample], 'ro')
-        # plt.show()
-        logmass.append(np.log10(gal['stellar_mass']))
-        g.append(gal['Mag_true_g_sdss_z0'])
-        r.append(gal['Mag_true_r_sdss_z0'])
-        i.append(gal['Mag_true_i_sdss_z0'])
-        z.append(gal['Mag_true_z_sdss_z0'])
-        galid.append(gal['galaxy_id'])
-        #ellip.append(gal['morphology/totalEllipticity'])
+    if c<2:
+        print(len(gal['galaxy_id']))
+        # logsfrtot.append(np.log10(gal['totalStarFormationRate']))
+        # redshift.append(gal['redshift'])
+        # print(max(gal['redshift']))
+        # # sample = onp.random.choice(len(gal['redshift']), size=100)
+        # # plt.plot(gal['ra'][sample], gal['dec'][sample], 'ro')
+        # # plt.show()
+        # logmass.append(np.log10(gal['stellar_mass']))
+        # g.append(gal['Mag_true_g_sdss_z0'])
+        # r.append(gal['Mag_true_r_sdss_z0'])
+        # i.append(gal['Mag_true_i_sdss_z0'])
+        # z.append(gal['Mag_true_z_sdss_z0'])
+        # galid.append(gal['galaxy_id'])
+        # #ellip.append(gal['morphology/totalEllipticity'])
         print("Reading healpixel {:d}".format(healpix+1))
         c+=1
     else:
         break
-
+asdfa
 data_unscaled = {}
 data_unscaled['redshift']  = np.concatenate(redshift)
 print("Catalog length", len(data_unscaled['redshift']))
