@@ -182,7 +182,7 @@ print("Successfully added all items")
 
 t.build(10) # 10 trees
 
-t.save('/global/cscratch1/sd/agaglian/build_cdc2_euclidean.ann')
+t.save('/global/cscratch1/sd/agaglian/debug_build_cdc2_euclidean.ann')
 
 end = time.time()
 

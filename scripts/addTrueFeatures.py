@@ -28,10 +28,12 @@ else:
     tot = 5000
 
 start = time.time()
-modes = np.array(['SN Ia', 'SN II', 'SLSN-I', 'SN IIP', 'SN IIb', 'SN IIn', 'SN Ib', 'SN Ic', 'SN Ibc'])
+#modes = np.array(['SN Ia', 'SN II', 'SLSN-I', 'SN IIP', 'SN IIb', 'SN IIn', 'SN Ib', 'SN Ic', 'SN Ibc'])
+modes = np.array(['SN Ia', 'SN II', 'SN Ibc'])
 
-
-neigh_dict = {'SN Ia':381, 'SN II':1282, 'SLSN-I':103448, 'SN IIP':10791, 'SN IIb':34482, 'SN IIn':12448, 'SN Ib':21582, 'SN Ic':14354, 'SN Ibc':7957}
+#neigh_dict = {'SN Ia':407, 'SN II':1040, 'SN Ibc':8902}
+neigh_dict = {'SN Ia':815, 'SN II':2081, 'SN Ibc':17804}
+#neigh_dict = {'SN Ia':381, 'SN II':1282, 'SLSN-I':103448, 'SN IIP':10791, 'SN IIb':34482, 'SN IIn':12448, 'SN Ib':21582, 'SN Ic':14354, 'SN Ibc':7957}
 
 if full:
     cosmo = GCRCatalogs.load_catalog("cosmoDC2_v1.1.4")
@@ -50,26 +52,27 @@ for mode in modes:
         modestr = mode
 
 #add the ghost matched catalog
-    cdc2_matched_nn = pd.read_csv("/global/cscratch1/sd/agaglian/matchedDC2_%s_%i.tar.gz" % (modestr, n_neigh), memory_map=True, low_memory=True)
+    cdc2_matched_nn = pd.read_csv("/global/cscratch1/sd/agaglian/matchedDC2_euclid_%s_%i.tar.gz" % (modestr, n_neigh), memory_map=True, low_memory=True)
 
     print("Loaded the GHOST-DC2 matched catalog")
 
     galaxy_ids = cdc2_matched_nn['galaxy_id']
-    features = ['mag_true_u_lsst', 'mag_true_g_lsst','mag_true_r_lsst', 
+    features = np.array(['mag_true_u_lsst', 'mag_true_g_lsst','mag_true_r_lsst', 
                     'mag_true_i_lsst', 'mag_true_z_lsst',
                      'mag_true_Y_lsst','size_true', 'size_minor_true',
                      'size_disk_true', 'size_minor_disk_true', 'size_bulge_true',
                      'size_minor_bulge_true','galaxy_id', 'sersic_disk', 'sersic_bulge',
-                     'position_angle_true', 'ra', 'dec']
+                     'position_angle_true', 'ra', 'dec', 'bulge_to_total_ratio_i'])
 
     filters=[(lambda x: np.isin(x, galaxy_ids), 'galaxy_id')]
     cdc2_true = {}
     for feature in features:
         cdc2_true[feature] = []
     c = 0
+    print(cdc2_true.keys())
     start_time = time.time()
     for gal in cosmo.get_quantities(features, filters=filters, return_iterator=True):
-        for features in features:
+        for feature in features:
            cdc2_true[feature].append(gal[feature]) 
         elapsed = time.time() - start_time
         print(c, "Elapsed time = ", elapsed)

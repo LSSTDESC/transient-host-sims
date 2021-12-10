@@ -29,7 +29,15 @@ if full:
 else:
     tot = 5000
 
-modes = np.array(['SN Ia', 'SN II', 'SLSN-I', 'SN IIP', 'SN IIb', 'SN IIn', 'SN Ib', 'SN Ic', 'SN Ibc'])
+#modes = np.array(['SN Ia', 'SN II', 'SLSN-I', 'SN IIP', 'SN IIb', 'SN IIn', 'SN Ib', 'SN Ic', 'SN Ibc'])
+#modes = np.array(['SN Ia', 'SN II', 'SN Ibc'])
+
+#neigh_dict = {'SN Ia':407, 'SN II':1040, 'SN Ibc':8902}
+
+#modes = np.array(['SN Ia', 'SN II', 'SN Ibc'])
+modes = np.array(['SN Ibc'])
+
+neigh_dict = {'SN Ia':815, 'SN II':2081, 'SN Ibc':17804}
 
 # read in file of CosmoDC2 galaxies, with PZFlow SFR and redshifts, limited to abs r-band magnitude < -15
 # and -0.18 < i-z < 0.5
@@ -44,6 +52,9 @@ print("Loaded the cosmoDC2 image catalog with photo-zs!")
 import time
 
 print("Loaded the cosmoDC2 image catalog with photo-zs!")
+
+#add new ellipticity values
+ImageEllipts = pd.read_csv("/global/cscratch1/sd/agaglian/fullDC2MomentEllipticityCatalog.tar.gz", memory_map=True, low_memory=True)
 
 #add photoz_errs from the other catalog
 features = np.array(['galaxy_id', 'photoz_mask', 'mag_err_u_photoz', 'mag_err_g_photoz', 'mag_err_r_photoz', 'mag_err_i_photoz','mag_err_z_photoz', 'mag_err_y_photoz'])
@@ -85,10 +96,10 @@ cdc2_pz['mag_err_y_photoz']  = np.concatenate(magerr_y)
 
 cdc2_pz = pd.DataFrame(cdc2_pz)
 
-neigh_dict = {'SN Ia':381, 'SN II':1282, 'SLSN-I':103448, 'SN IIP':10791, 'SN IIb':34482, 'SN IIn':12448, 'SN Ib':21582, 'SN Ic':14354, 'SN Ibc':7957}
+#neigh_dict = {'SN Ia':381, 'SN II':1282, 'SLSN-I':103448, 'SN IIP':10791, 'SN IIb':34482, 'SN IIn':12448, 'SN Ib':21582, 'SN Ic':14354, 'SN Ibc':7957}
 
 for mode in modes:
-
+    print("Running for %s" % mode)
     n_neigh = neigh_dict[mode]
 
     if ' ' in mode:
@@ -118,6 +129,8 @@ for mode in modes:
     cdc2_nbrs_pz.reset_index(inplace=True, drop=True)
     #sort by objID
     cdc2_nbrs_pz.sort_values(by=['galaxy_id'], inplace=True)
+
+    cdc2_nbrs_pz = pd.merge(cdc2_nbrs_pz, ImageEllipts, on=['galaxy_id'])
 
     cdc2_nbrs_pz.to_csv('/global/cscratch1/sd/agaglian/cdc2_matched_ghost_{:s}_unq_zwgt_5pct_k{:d}.tar.gz'.format(modestr, n_neigh), index=False)
 

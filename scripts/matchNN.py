@@ -29,7 +29,7 @@ full = True
 print("Starting our matching sequence!") 
 
 if full:
-    tot = 3000000
+    tot = 6000000
 else:
     tot = 5000
 

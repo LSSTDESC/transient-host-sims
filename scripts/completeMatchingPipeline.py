@@ -49,6 +49,8 @@ if full:
     cdc2 = pd.read_csv("/global/homes/a/agaglian/data_files/ghost_matched/DC2full_pzRedshifts_SFR_39iter.csv", memory_map=True, low_memory=True)
     cosmo_pz = GCRCatalogs.load_catalog("cosmoDC2_v1.1.4_image_with_photozs_v1")
     cosmo = GCRCatalogs.load_catalog("cosmoDC2_v1.1.4")
+    #add new ellipticity values 
+    ImageEllipts = pd.read_csv("/global/cscratch1/sd/agaglian/fullDC2MomentEllipticityCatalog.tar.gz", memory_map=True, low_memory=True)
     print("Loaded pzflow-oversampled catalog")
 else:
     cdc2 = pd.read_csv("/global/cscratch1/sd/mlokken/sn_hostenv/DC2_pzRedshifts_SFR_RMag_lt_neg15.csv", memory_map=True, low_memory=True)
@@ -323,6 +325,8 @@ for mode in modes:
 
     cdc2_true = pd.DataFrame(cdc2_true)
     cdc2_nbrs = pd.merge(cdc2_matched_nn, cdc2_true, on=['galaxy_id'], how='left')
+
+    cdc2_nbrs = pd.merge(ImageEllipts, cdc2_nbrs, on=['galaxy_id'])
 
     cdc2_nbrs.to_csv('/global/cscratch1/sd/agaglian/cdc2_matched_wTrue_{:s}_unq_zwgt_5pct_k{:d}.tar.gz'.format(modestr, n_neigh), index=False)
 
