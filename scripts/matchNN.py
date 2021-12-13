@@ -86,10 +86,11 @@ cI = cI.loc[keep]
 cZ = cZ.loc[keep]
 c_iz = c_iz.loc[keep]
 c_gr = cG-cR
-c_ellip = cdc2['morphology/totalEllipticity']
+#c_ellip = cdc2['morphology/totalEllipticity'
+c_rkpc= cdc2['R_kpc']
 c_rshift = cdc2['PZflowredshift']
 
-sim_keyparams= np.vstack((cR, cI, c_gr, c_iz, c_ellip, c_rshift)).T
+sim_keyparams= np.vstack((cR, cI, c_gr, c_iz, c_rkpc, c_rshift)).T
 
 div = 20.
 percentage = 1/div*100

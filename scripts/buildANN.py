@@ -103,7 +103,7 @@ ghost_objIDs = ghost['objID'].values[og_ghost_idx]
 # read in file of CosmoDC2 galaxies, with PZFlow SFR and redshifts, limited to abs r-band magnitude < -15
 # and -0.18 < i-z < 0.5
 if full:
-    cdc2 = pd.read_csv("/global/homes/a/agaglian/data_files/ghost_matched/DC2full_pzRedshifts_SFR_39iter.csv", memory_map=True, low_memory=True)
+    cdc2 = pd.read_csv("/global/cscratch1/sd/agaglian/DC2full_pzRedshifts_tenHealpix_sdss_updMag_Rkpc.tar.gz", memory_map=True, low_memory=True)
 else:
     cdc2 = pd.read_csv("/global/cscratch1/sd/mlokken/sn_hostenv/DC2_pzRedshifts_SFR_RMag_lt_neg15.csv", memory_map=True, low_memory=True)
 
@@ -182,7 +182,7 @@ print("Successfully added all items")
 
 t.build(10) # 10 trees
 
-t.save('/global/cscratch1/sd/agaglian/debug_build_cdc2_euclidean.ann')
+t.save('/global/cscratch1/sd/agaglian/build_cdc2_euclidean_z3_sdss_updMag_Rkpc.ann')
 
 end = time.time()
 
