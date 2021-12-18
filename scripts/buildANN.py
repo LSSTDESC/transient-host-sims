@@ -29,7 +29,7 @@ if full:
 else:
     tot = 5000
 
-fn = '/global/cscratch1/sd/mlokken/sn_hostenv/GHOSTwithImageSizes.csv'
+fn = '/global/cscratch1/sd/agaglian/GHOSTwithImageSizes.csv'
 ghost = pd.read_csv(fn)
 
 transient_class = ghost['TransientClass']
@@ -43,27 +43,27 @@ g_rshift2 = ghost['TransientRedshift']
 g_gr   = ghost['g-r_SDSS_rest']
 g_ri   = ghost['r-i_SDSS_rest']
 g_iz   = ghost['i-z_SDSS_rest']
-g_Rkpc = np.average([ghost['gR_kpc'], ghost['rR_kpc'], ghost['iR_kpc'], ghost['zR_kpc'], ghost['yR_kpc']]) # radius in kpc, averaged across bands
+#g_Rkpc = np.sqrt(np.nanmean([ghost['gR_kpc']**2, ghost['rR_kpc']**2, ghost['iR_kpc']**2, ghost['zR_kpc']**2, ghost['yR_kpc']**2], axis=0)) # radius in kpc, averaged across bands
 
 # keep track of indices from original file
 og_ghost_idx = np.arange(len(ghost))
-keydata = np.vstack((gMag_G, gMag_R, gMag_I, gMag_Z, g_gr, g_ri, g_iz, g_Rkpc, g_rshift, g_rshift2)).T
+keydata = np.vstack((gMag_G, gMag_R, gMag_I, gMag_Z, g_gr, g_ri, g_iz, g_rshift, g_rshift2)).T #g_Rkpc, 
 # first remove all -999s:
 keydata[np.logical_or(keydata<-50,keydata>100)] = np.nan
 # get rid of redshifts with nan
 delete_znans = []
 z_nans = 0
 for i in range(len(keydata)):
-    if np.isnan(keydata[i,8]):
+    if np.isnan(keydata[i,7]):
         z_nans += 1
 for i in range(len(keydata)):
-    if np.isnan(keydata[i,8]):
+    if np.isnan(keydata[i,7]):
         # if transient redshift is not nan, replace with transient redshift
-        if not np.isnan(keydata[i,9]):
-            keydata[i,8] = keydata[i,9]
+        if not np.isnan(keydata[i,8]):
+            keydata[i,7] = keydata[i,8]
         else:
             delete_znans.append(i)
-    if keydata[i,8] <= 0:
+    if keydata[i,7] <= 0:
         delete_znans.append(i)
 keydata = np.delete(keydata, delete_znans, axis=0)
 og_ghost_idx = np.delete(og_ghost_idx, delete_znans)
@@ -93,8 +93,8 @@ gZ = keydata[:,3]
 g_gr = keydata[:,4]
 g_ri   = keydata[:,5]
 g_iz   = keydata[:,6]
-g_Rkpc = keydata[:,7]
-g_rshift = keydata[:,8]
+#g_Rkpc = keydata[:,7]
+g_rshift = keydata[:,7]
 ghost_objIDs = ghost['objID'].values[og_ghost_idx]
 
 #!/global/common/software/lsst/common/miniconda/current/envs/stack/bin/python
@@ -103,7 +103,7 @@ ghost_objIDs = ghost['objID'].values[og_ghost_idx]
 # read in file of CosmoDC2 galaxies, with PZFlow SFR and redshifts, limited to abs r-band magnitude < -15
 # and -0.18 < i-z < 0.5
 if full:
-    cdc2 = pd.read_csv("/global/cscratch1/sd/agaglian/DC2full_pzRedshifts_tenHealpix_sdss_updMag_Rkpc.tar.gz", memory_map=True, low_memory=True)
+    cdc2 = pd.read_csv("/global/cscratch1/sd/agaglian/DC2full_pzRedshifts_twentyHealpix_sdss_updMag_Rkpc_Final.tar.gz", memory_map=True, low_memory=True)
 else:
     cdc2 = pd.read_csv("/global/cscratch1/sd/mlokken/sn_hostenv/DC2_pzRedshifts_SFR_RMag_lt_neg15.csv", memory_map=True, low_memory=True)
 
@@ -121,10 +121,10 @@ c_iz = c_iz.loc[keep]
 c_gr = cG-cR
 # c_ellip = cdc2['morphology/totalEllipticity']
 c_rshift = cdc2['PZflowredshift']
-c_rkpc   = cdc2['R_kpc']
+#c_Rkpc   = cdc2['R_kpc']
 
-sim_keyparams= np.vstack((cR, cI, c_gr, c_iz, c_Rkpc, c_rshift)).T
-data_keyparams= np.vstack((gR, gI, g_gr, g_iz, g_Rkpc, g_rshift)).T
+sim_keyparams= np.vstack((cR, cI, c_gr, c_iz, c_rshift)).T # c_Rkpc,
+data_keyparams= np.vstack((gR, gI, g_gr, g_iz,g_rshift)).T # g_Rkpc, 
 
 # The purpose of is this is so that the nearest-neighbors algorithm is searching in a multidimensional space
 # where typical distances are similar in all dimensions
@@ -136,11 +136,11 @@ data_keyparams_norm = keyparams_norm[0:len(data_keyparams[:,0]),:]
 sim_keyparams_norm  = keyparams_norm[len(data_keyparams[:,0]):,:]
 
 div = 20.
-data_keyparams_norm[:,5]/=div
-sim_keyparams_norm[:,5]/=div
+data_keyparams_norm[:,4]/=div
+sim_keyparams_norm[:,4]/=div
 
-ghost_scaled = pd.DataFrame(data=data_keyparams_norm, columns=['R', 'I', 'g-r', 'i-z', 'R_kpc', 'redshift'])
-dc2_scaled = pd.DataFrame(data=sim_keyparams_norm, columns=['R', 'I', 'g-r', 'i-z', 'R_kpc', 'redshift'])
+ghost_scaled = pd.DataFrame(data=data_keyparams_norm, columns=['R', 'I', 'g-r', 'i-z', 'redshift']) #'R_kpc', 
+dc2_scaled = pd.DataFrame(data=sim_keyparams_norm, columns=['R', 'I', 'g-r', 'i-z', 'redshift']) #'R_kpc', 
 ghost_scaled['TransientClass'] = transient_class
 ghost_scaled['objID'] = ghost_objIDs
 ghost_scaled['og_idx'] = og_ghost_idx
@@ -182,7 +182,7 @@ print("Successfully added all items")
 
 t.build(10) # 10 trees
 
-t.save('/global/cscratch1/sd/agaglian/build_cdc2_euclidean_z3_sdss_updMag_Rkpc.ann')
+t.save('/global/cscratch1/sd/agaglian/build_cdc2_euclidean_z3_20healpix_updMag.ann')
 
 end = time.time()
 
