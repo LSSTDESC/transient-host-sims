@@ -32,7 +32,9 @@ start = time.time()
 modes = np.array(['SN Ia', 'SN II', 'SN Ibc'])
 
 #neigh_dict = {'SN Ia':407, 'SN II':1040, 'SN Ibc':8902}
-neigh_dict = {'SN Ia':815, 'SN II':2081, 'SN Ibc':17804}
+#neigh_dict = {'SN Ia':815, 'SN II':2081, 'SN Ibc':17804}
+neigh_dict = {'SN Ia':678, 'SN II':3147, 'SN Ibc':9508}
+#neigh_dict = {'SN Ia':1356, 'SN II':6295, 'SN Ibc':19017}
 #neigh_dict = {'SN Ia':381, 'SN II':1282, 'SLSN-I':103448, 'SN IIP':10791, 'SN IIb':34482, 'SN IIn':12448, 'SN Ib':21582, 'SN Ic':14354, 'SN Ibc':7957}
 
 if full:
@@ -52,7 +54,7 @@ for mode in modes:
         modestr = mode
 
 #add the ghost matched catalog
-    cdc2_matched_nn = pd.read_csv("/global/cscratch1/sd/agaglian/matchedDC2_euclid_%s_%i.tar.gz" % (modestr, n_neigh), memory_map=True, low_memory=True)
+    cdc2_matched_nn = pd.read_csv("/global/cscratch1/sd/agaglian/matchedDC2_euclid_z3_%s_%i.tar.gz" % (modestr, n_neigh), memory_map=True, low_memory=True)
 
     print("Loaded the GHOST-DC2 matched catalog")
 
@@ -83,7 +85,7 @@ for mode in modes:
     cdc2_true = pd.DataFrame(cdc2_true)
     cdc2_nbrs = pd.merge(cdc2_matched_nn, cdc2_true, on=['galaxy_id'], how='left')
 
-    cdc2_nbrs.to_csv('/global/cscratch1/sd/agaglian/cdc2_matched_wTrue_{:s}_unq_zwgt_5pct_k{:d}.tar.gz'.format(modestr, n_neigh), index=False)
+    cdc2_nbrs.to_csv('/global/cscratch1/sd/agaglian/cdc2_matched_wTrue_{:s}_z3_unq_zwgt_5pct_k{:d}.tar.gz'.format(modestr, n_neigh), index=False)
 
     print("Saved file for %s."%mode)
 

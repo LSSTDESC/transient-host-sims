@@ -21,7 +21,7 @@ import sys
 
 start = time.time()
 
-df_comb = pd.read_csv("/global/cscratch1/sd/agaglian/DC2full_pzRedshifts_tenHealpix_Final.tar.gz",usecols=['galaxy_id', 'PZflowredshift', 'DC2redshift'])
+df_comb = pd.read_csv("/global/cscratch1/sd/agaglian/DC2full_pzRedshifts_tenHealpix_secondSet_Final.tar.gz",usecols=['galaxy_id', 'PZflowredshift', 'DC2redshift'])
 #galid = df_comb['galaxy_id'].values
 #del df_comb
 cosmo=GCRCatalogs.load_catalog("cosmoDC2_v1.1.4")
@@ -36,7 +36,7 @@ df_sdss_comb = df_sdss.merge(df_comb, on='galaxy_id')
 #shift to apparent with the old mags, then back to absolute with the new mags 
 #df_sdss_comb
 
-df_sdss_comb.to_csv("/global/cscratch1/sd/agaglian/DC2full_pzRedshifts_tenHealpix_Final_sdss.tar.gz",index=False)
+df_sdss_comb.to_csv("/global/cscratch1/sd/agaglian/DC2full_pzRedshifts_tenHealpix_secondSet_Final_sdss.tar.gz",index=False)
 
 end = time.time()
 

@@ -24,7 +24,8 @@ start = time.time()
 
 cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
 
-df_sdss_comb = pd.read_csv("/global/cscratch1/sd/agaglian/DC2full_pzRedshifts_tenHealpix_sdss_updMag.tar.gz")
+#df_sdss_comb = pd.read_csv("/global/cscratch1/sd/agaglian/DC2full_pzRedshifts_tenHealpix_sdss_updMag.tar.gz")
+df_sdss_comb = pd.read_csv("/global/cscratch1/sd/agaglian/DC2full_pzRedshifts_tenHealpix_secondSet_sdss_updMag.tar.gz")
 
 print("Starting the catalog loading!")
 #combine with the image catalog and get physical radius values
@@ -56,7 +57,7 @@ del df_sdss_wImg['RSQ_pixel_gal']
 print("Done. Saving! Here's a sneak peek at the catalog:")
 print(df_sdss_wImg.head())
 
-df_sdss_wImg.to_csv("/global/cscratch1/sd/agaglian/DC2full_pzRedshifts_tenHealpix_sdss_updMag_Rkpc.tar.gz",index=False)
+df_sdss_wImg.to_csv("/global/cscratch1/sd/agaglian/DC2full_pzRedshifts_tenHealpix_sdss_updMag_Rkpc_secondSet.tar.gz",index=False)
 
 end = time.time()
 

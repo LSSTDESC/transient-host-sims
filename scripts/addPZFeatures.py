@@ -37,7 +37,9 @@ else:
 #modes = np.array(['SN Ia', 'SN II', 'SN Ibc'])
 modes = np.array(['SN Ibc'])
 
-neigh_dict = {'SN Ia':815, 'SN II':2081, 'SN Ibc':17804}
+#neigh_dict = {'SN Ia':815, 'SN II':2081, 'SN Ibc':17804}
+neigh_dict = {'SN Ia':1356, 'SN II':6295, 'SN Ibc':19017}
+
 
 # read in file of CosmoDC2 galaxies, with PZFlow SFR and redshifts, limited to abs r-band magnitude < -15
 # and -0.18 < i-z < 0.5
@@ -107,7 +109,7 @@ for mode in modes:
     else:
         modestr = mode
 
-    cdc2_nbrs = pd.read_csv('/global/cscratch1/sd/agaglian/cdc2_matched_wTrue_{:s}_unq_zwgt_5pct_k{:d}.tar.gz'.format(modestr, n_neigh))
+    cdc2_nbrs = pd.read_csv('/global/cscratch1/sd/agaglian/cdc2_matched_wTrue_{:s}_z3_unq_zwgt_5pct_k{:d}.tar.gz'.format(modestr, n_neigh))
 
     print("Loaded up cdc2_nbrs catalog")
 
@@ -119,12 +121,12 @@ for mode in modes:
 
     # save it all
     cdc2_nbrs_pz['redshift'] = cdc2_nbrs_pz['PZflowredshift']
-    cdc2_nbrs_pz['totalEllipticity'] = cdc2_nbrs_pz['morphology/totalEllipticity']
-    cdc2_nbrs_pz['SFRtot'] = cdc2_nbrs_pz['PZflowSFRtot']
+   # cdc2_nbrs_pz['totalEllipticity'] = cdc2_nbrs_pz['morphology/totalEllipticity']
+    #cdc2_nbrs_pz['SFRtot'] = cdc2_nbrs_pz['SFRtot']
 
     del cdc2_nbrs_pz['PZflowredshift']
-    del cdc2_nbrs_pz['morphology/totalEllipticity']
-    del cdc2_nbrs_pz['PZflowSFRtot']
+  #  del cdc2_nbrs_pz['morphology/totalEllipticity']
+   # del cdc2_nbrs_pz['PZflowSFRtot']
 
     cdc2_nbrs_pz.reset_index(inplace=True, drop=True)
     #sort by objID
@@ -132,7 +134,7 @@ for mode in modes:
 
     cdc2_nbrs_pz = pd.merge(cdc2_nbrs_pz, ImageEllipts, on=['galaxy_id'])
 
-    cdc2_nbrs_pz.to_csv('/global/cscratch1/sd/agaglian/cdc2_matched_ghost_{:s}_unq_zwgt_5pct_k{:d}.tar.gz'.format(modestr, n_neigh), index=False)
+    cdc2_nbrs_pz.to_csv('/global/cscratch1/sd/agaglian/cdc2_matched_ghost_{:s}_z3_unq_zwgt_5pct_k{:d}.tar.gz'.format(modestr, n_neigh), index=False)
 
     print("Saved full dataset for %s."%mode)
     end = time.time()
@@ -155,8 +157,8 @@ for mode in modes:
         plt.savefig("../plots/{0}/cdc2_ghost_{0}_k10_lowz_weighting_matches_unq_histogram.png".format(modestr))
 
         # check all properties against each other for CosmoDC2
-        labels=['R', 'I', 'g-r', 'i-z', 'ellipticity', 'redshift']
-        lims =[[-25,-14.5],[-25,-14.5],[-0.3,1.2],[-0.2,0.5],[0,0.4],[0,1]]
+        labels=['R', 'I', 'g-r', 'i-z', 'redshift']#'ellipticity', 
+        lims =[[-25,-14.5],[-25,-14.5],[-0.3,1.2],[-0.2,0.5],[0,3]]#,[0,0.4]
         for i in range(6):
             for j in range(6):
                 if i!=j:
