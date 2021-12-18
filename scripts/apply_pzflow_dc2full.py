@@ -15,11 +15,15 @@ import GCRCatalogs
 import time
 import numpy as onp
 import seaborn as sns
+from mpi4py import MPI
+import os
 sns.set_context("talk")
 start = time.process_time()
+
+
 def f(logmass):
     return 2*logmass - 24
-print(GCRCatalogs.__version__)
+# print(GCRCatalogs.__version__)
 def split_dataframe(df, chunk_size = 10000): 
     chunks = list()
     num_chunks = len(df) // chunk_size + 1
@@ -28,18 +32,30 @@ def split_dataframe(df, chunk_size = 10000):
     return chunks
 
 plotting = False
+print("initializing rank and size")
+mpi_rank = MPI.COMM_WORLD.Get_rank()
+mpi_size = MPI.COMM_WORLD.Get_size()
+
 # load in CosmoDC2 catalog
 cosmo=GCRCatalogs.load_catalog("cosmoDC2_v1.1.4_image")
 quantities = ['galaxy_id', 'redshift', 'mag_true_u_lsst', 'mag_true_g_lsst', 'mag_true_r_lsst', 'mag_true_i_lsst', 'mag_true_z_lsst', 'mag_true_y_lsst', 'stellar_mass', 'totalStarFormationRate']
-# filters = ['mag_true_r_lsst<28']
-# 
-subselect = False
-#c=0
-healpix_toUse = [9812, 9813, 9814, 9815, 9816, 9940, 9941, 9942, 9943, 9944]
-for c in np.arange(10):
-   # healpix = cosmo.available_healpix_pixels[c]
-    healpix = healpix_toUse[c] 
 
+# healpix_toUse = [9812, 9813, 9814, 9815, 9816, 9940, 9941, 9942, 9943, 9944] # already done
+# healpix_toUse = [9556, 9557, 9558, 9559, 9560, 9683, 9684, 9685, 9686, 9687, 9688, 9812, 9813, 9814, 9815, 9816, 9940, 9941, 9942, 9943, 9944, 10068, 10069, 10070, 10071, 10072, 10195,10196,10197, 10198, 10199, 10120] # full list
+healpix_toUse = [9556, 9557, 9558, 9559, 9560, 9683, 9684, 9685, 9686, 9687, 9688, 10068, 10069, 10070, 10071, 10072, 10195, 10196, 10197, 10198, 10199] # partial list for now
+
+nruns_local = len(healpix_toUse) // mpi_size
+if mpi_rank == mpi_size-1:
+    extras = len(healpix_toUse) % mpi_size
+else:
+    extras = 0
+
+for c in range(nruns_local+extras):
+    healpix = healpix_toUse[c+nruns_local*mpi_rank] 
+    print(healpix)
+    if os.path.exists("/global/cscratch1/sd/mlokken/sn_hostenv/DC2full_pzRedshifts_div1000_%i.csv"%healpix):
+        print("this HealPixel already run.")
+        continue
     logsfrtot = []
     redshift  = []
     logmass   = []
@@ -50,28 +66,10 @@ for c in np.arange(10):
     z = []
     y = []
     galid = []
-
-#    for healpix in cosmo.available_healpix_pixels:
-    print(healpix)
     gal = cosmo.get_quantities(quantities, native_filters=f"healpix_pixel == {healpix}")
 
-#        if c<20:
     print(len(gal['galaxy_id']))
-    #logsfrtot.append(np.log10(gal['totalStarFormationRate']))
-    #redshift.append(gal['redshift'])
-    #logmass.append(np.log10(gal['stellar_mass']))
-    #u.append(gal['mag_true_u_lsst'])
-    #g.append(gal['mag_true_g_lsst'])
-    #r.append(gal['mag_true_r_lsst'])
-    #i.append(gal['mag_true_i_lsst'])
-    #z.append(gal['mag_true_z_lsst'])
-    #y.append(gal['mag_true_y_lsst'])
-    #galid.append(gal['galaxy_id'])
-    print("Reading healpixel {:d}".format(healpix+1))
-
-#       else:
-#           break
-    #asdfa
+    print("Reading healpixel {:d}".format(healpix))
     data_unscaled = {}
     data_unscaled['redshift']  = gal['redshift']
     print("Catalog length", len(data_unscaled['redshift']))
@@ -85,14 +83,10 @@ for c in np.arange(10):
     data_unscaled['mag_true_y_lsst']  = gal['mag_true_y_lsst']
     data_unscaled['galaxy_id'] = gal['galaxy_id']
 
-    # data_unscaled['morphology/totalEllipticity'] = np.concatenate(ellip)
     data_unscaled = pd.DataFrame(data_unscaled)
     #print("Cutting SFR/logmass clump")
     # get rid of a weird clump at M* > 10^10 Msol and logSFR = -5
     #data_unscaled = data_unscaled.iloc[np.asarray((data_unscaled['logSFRtot'] - 9) > f(data_unscaled['logmass']))]
-    print("Getting colors.")
-    # get colors
-
     # standard scale the reference magnitude and colors
     print("Standard scaling.")
     data = data_unscaled.copy()
@@ -185,7 +179,7 @@ for c in np.arange(10):
     #    data_unscaled =  data_unscaled[np.abs((m*data_unscaled[band].values + b) - data_unscaled['mag_true_z_lsst'].values) < 1.3]
     # save
     print("Saving.")
-    #data_unscaled.to_csv("/global/cscratch1/sd/mlokken/sn_hostenv/DC2full_pzRedshifts_1itertest_div1000.csv",index=False)
-    data_unscaled.to_csv("/global/cscratch1/sd//agaglian/DC2full_pzRedshifts_1itertest_div1000%i.csv"%c,index=False)
+    data_unscaled.to_csv("/global/cscratch1/sd/mlokken/sn_hostenv/DC2full_pzRedshifts_div1000_%i.csv"%healpix,index=False)
+    # data_unscaled.to_csv("/global/cscratch1/sd//agaglian/DC2full_pzRedshifts_1itertest_div1000%i.csv"%c,index=False)
 
     print("CPU time taken: ", time.process_time() - start)
