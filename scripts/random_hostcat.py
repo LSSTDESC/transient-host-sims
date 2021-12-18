@@ -21,11 +21,11 @@ import numpy.ma as ma
 
 # read in file of CosmoDC2 galaxies, with PZFlow SFR and redshifts, limited to abs r-band magnitude < -15
 # and -0.18 < i-z < 0.5
-if full:
-    cdc2 = pd.read_csv("/global/cscratch1/sd/mlokken/sn_hostenv/DC2full_pzRedshifts_SFR_39iter.csv")
-else:
-    cdc2 = pd.read_csv("/global/cscratch1/sd/mlokken/sn_hostenv/DC2_pzRedshifts_SFR_RMag_lt_neg15.csv")
+cdc2 = pd.read_csv("/global/cscratch1/sd/mlokken/sn_hostenv/DC2full_pzRedshifts_twentyHealpix_sdss_updMag_Rkpc_Final.tar.gz")
+healpix_toUse = [9556, 9557, 9558, 9559, 9560, 9683, 9684, 9685, 9686, 9687, 9688, 9812, 9813, 9814, 9815, 9816, 9940, 9941, 9942, 9943, 9944, 10068, 10069, 10070, 10071, 10072, 10195,10196,10197, 10198, 10199] # full list
+
 cI = cdc2['Mag_true_i_sdss_z0']
+print(len(cI))
 cZ = cdc2['Mag_true_z_sdss_z0']
 c_iz = cI-cZ
 keep = (c_iz < 0.5)&(c_iz>-0.18)
@@ -59,21 +59,18 @@ dct = {'mag_true_u_lsst':[], 'mag_true_g_lsst':[],'mag_true_r_lsst':[],
                  'size_disk_true':[], 'size_minor_disk_true':[], 'size_bulge_true':[], 
                  'size_minor_bulge_true':[],'galaxy_id':[], 'sersic_disk':[], 'sersic_bulge':[], 
                  'position_angle_true':[], 'ra':[], 'dec':[]}
-if full:
-    cosmo = GCRCatalogs.load_catalog("cosmoDC2_v1.1.4_image")
-    c=0
-    for gal in cosmo.get_quantities(quantities, return_iterator=True):
-        if c<39:
-            print("Reading healpixel {:d}".format(c+1))
-            for string in quantities:
-                dct[string].extend(gal[string])
-        c+=1
-    cdc2_true = pd.DataFrame(dct)
-    print(cdc2_true)
-else:
-    cosmo = GCRCatalogs.load_catalog("cosmoDC2_v1.1.4_small")
-    filters=[(lambda x: np.isin(x, galaxy_ids), 'galaxy_id')]
-    cdc2_true = cosmo.get_quantities(quantities, filters=filters)
+
+cosmo = GCRCatalogs.load_catalog("cosmoDC2_v1.1.4_image")
+
+for c in range(len(healpix_toUse)):
+    healpix = healpix_toUse[c]
+    print("Getting additional information from Healpix %d from the full add-on catalog"%healpix)
+    gal = cosmo.get_quantities(quantities, native_filters=f"healpix_pixel == {healpix}")
+    for string in quantities:
+        dct[string].extend(gal[string])
+
+cdc2_true = pd.DataFrame(dct)
+print(cdc2_true)
 
 # #clear cosmo from memory
 del cosmo
@@ -84,19 +81,18 @@ pz_quantities = ['galaxy_id', 'mag_err_u_photoz', 'mag_err_g_photoz', 'mag_err_r
 if full:
     dct = {'galaxy_id':[], 'mag_err_u_photoz':[], 'mag_err_g_photoz':[], 'mag_err_r_photoz':[], 'mag_err_i_photoz':[], 'mag_err_z_photoz':[], 'mag_err_y_photoz':[]}
     cosmo_pz = GCRCatalogs.load_catalog("cosmoDC2_v1.1.4_image_with_photozs_v1")
-    c=0
-    for gal in cosmo_pz.get_quantities(pz_quantities, return_iterator=True):
-        if c<39:
-            print("Reading healpixel {:d}".format(c+1))
-            photoz_mask  = gal['photoz_mask']
-            dct['galaxy_id'].extend(gal['galaxy_id'])
-            dct['mag_err_u_photoz'].extend(gal['mag_err_u_photoz'][photoz_mask])
-            dct['mag_err_g_photoz'].extend(gal['mag_err_g_photoz'][photoz_mask])
-            dct['mag_err_r_photoz'].extend(gal['mag_err_r_photoz'][photoz_mask])
-            dct['mag_err_i_photoz'].extend(gal['mag_err_i_photoz'][photoz_mask])
-            dct['mag_err_z_photoz'].extend(gal['mag_err_z_photoz'][photoz_mask])
-            dct['mag_err_y_photoz'].extend(gal['mag_err_y_photoz'][photoz_mask])
-        c+=1
+    for c in range(len(healpix_toUse)):
+        healpix = healpix_toUse[c]
+        print("Getting Healpix %d from the photo-z add-on catalog"%healpix)
+        gal = cosmo_pz.get_quantities(pz_quantities, native_filters=f"healpix_pixel == {healpix}")
+        photoz_mask  = gal['photoz_mask']
+        dct['galaxy_id'].extend(gal['galaxy_id'])
+        dct['mag_err_u_photoz'].extend(gal['mag_err_u_photoz'][photoz_mask])
+        dct['mag_err_g_photoz'].extend(gal['mag_err_g_photoz'][photoz_mask])
+        dct['mag_err_r_photoz'].extend(gal['mag_err_r_photoz'][photoz_mask])
+        dct['mag_err_i_photoz'].extend(gal['mag_err_i_photoz'][photoz_mask])
+        dct['mag_err_z_photoz'].extend(gal['mag_err_z_photoz'][photoz_mask])
+        dct['mag_err_y_photoz'].extend(gal['mag_err_y_photoz'][photoz_mask])
     cdc2_pz = pd.DataFrame(dct)
 else:
     cosmo_pz = GCRCatalogs.load_catalog("cosmoDC2_v1.1.4_small_with_photozs_v1")
@@ -118,6 +114,8 @@ cdc2_true = pd.DataFrame(cdc2_true)
 cdc2_pz  = pd.DataFrame(cdc2_pz)
 cdc2_mrg = pd.merge(cdc2_sel, cdc2_true, on=['galaxy_id'], how='left')
 cdc2_mrg_pz = pd.merge(cdc2_mrg, cdc2_pz, on=["galaxy_id"], how='left')
+
+
 cdc2_mrg_pz.to_csv('/global/cscratch1/sd/mlokken/sn_hostenv/rand_hostlib.csv', index=False)
 print(len(cdc2_mrg['galaxy_id']))
 print(len(cdc2_mrg_pz['galaxy_id']))
