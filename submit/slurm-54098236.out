@@ -1,0 +1,22 @@
+/global/homes/a/agaglian/.snana: line 12: setSNANA: command not found
+/global/homes/a/agaglian/.snana: line 13: setSNANAnew: command not found
+Sun Jan 30 04:50:11 PST 2022
+
+CommandNotFoundError: Your shell has not been properly configured to use 'conda activate'.
+To initialize your shell, run
+
+    $ conda init <SHELL_NAME>
+
+Currently supported shells are:
+  - bash
+  - fish
+  - tcsh
+  - xonsh
+  - zsh
+  - powershell
+
+See 'conda init --help' for more information and options.
+
+IMPORTANT: You may need to close and restart your shell after running 'conda init'.
+
+
