@@ -1,1 +1,4 @@
-notebooks/.ipynb_checkpoints/*
+scripts/.ipynb_checkpoints/*
+scripts/.ipynb_checkpoints/ghost_cdc2_matching-checkpoint.py
+scripts/.ipynb_checkpoints/apply_pzflow_dc2full-checkpoint.py
+notebooks/CreateSCOTCH.py
