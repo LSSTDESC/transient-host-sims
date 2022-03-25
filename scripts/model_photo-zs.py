@@ -25,20 +25,21 @@ def split_dataframe(df, chunk_size = 10000):
     return chunks
 
 cosmo=GCRCatalogs.load_catalog("cosmoDC2_v1.1.4_small")
-quantities = ['redshift', 'mag_true_u_lsst', 'mag_true_g_lsst', 'mag_true_r_lsst', 'mag_true_i_lsst', 'mag_true_z_lsst', 'mag_true_y_lsst']
+get_cols = ['redshift', 'mag_true_u_lsst', 'mag_true_g_lsst', 'mag_true_r_lsst', 'mag_true_i_lsst', 'mag_true_z_lsst', 'mag_true_y_lsst']
 # , 'stellar_mass', 'totalStarFormationRate']
 
 print("Reading CosmoDC2 small catalog")
-data = cosmo.get_quantities(quantities)
+data = cosmo.get_quantities(get_cols)
 print("Catalog read.")
 df = pd.DataFrame(data)
 
+quantities = ['redshift', 'u', 'g', 'r', 'i', 'z', 'y']
 data = df.rename(columns={'mag_true_y_lsst': 'y', 
                    'mag_true_r_lsst': 'r', 
                    'mag_true_u_lsst': 'u', 
                    'mag_true_g_lsst': 'g', 
                    'mag_true_z_lsst': 'z', 
-                   'mag_true_i_lsst': 'i'})[['redshift', 'u', 'g', 'r', 'i', 'z', 'y']]
+                   'mag_true_i_lsst': 'i'})[quantities]
 z_col = 0
 # data['logSFRtot'] = onp.log10(data['totalStarFormationRate'])
 # data['logmass']   = onp.log10(data['stellar_mass'])
@@ -60,12 +61,13 @@ print("Original conditional columns:", conditional_columns)
 data_scaled = data.copy()
 for i in range(len(quantities)-2):
     data_scaled[quantities[i+1]+'-'+quantities[i+2]] = data[quantities[i+1]] - data[quantities[i+2]]
-data_scaled = data_scaled.drop(columns = conditional_columns)
+data_scaled = data_scaled.drop(columns=conditional_columns)
 
-means = data['r'].mean()
-stds = data['r'].std()
-print('')
-data_scaled['r'] = data['r']
+mean = data['r'].mean()
+std = data['r'].std()
+print('rmags normed by N(%d, %d)'%(mean, std))
+print('TODO: normalize rmag')
+data_scaled['r'] = (data['r'] - mean) / std
 ### TODO: may need to rescale the one magnitude
 conditional_columns = data_scaled.columns.drop(['redshift'])
 print("Scaled conditional columns:", conditional_columns)
@@ -94,7 +96,7 @@ latent = Tdist(input_dim=1)
 
 ### TODO: vary these between runs
 sharpness = 5#10
-spl_bins = 4#2
+spl_bins = 8#2
 
 bijector = Chain(
     InvSoftplus(z_col, sharpness),
@@ -130,7 +132,7 @@ plt.savefig("../plots/model_photo-zs_sharp%d_splbin%d_epoch%d_traning_loss.png" 
 plt.clf()
 # save the results, then apply them with the script apply_pzflow_dc2full.py
 flow.save('../data_files/model_photo-zs_sharp%d_splbin%d_epoch%d_flow.pkl' % (sharpness, spl_bins, n_ep))
-print("time taken for %d sharpness %d spline bins %d epochs training: "%(sharpness, spl_bins, n_ep), time.process_time() - start)
+print("time taken for %d sharpness %d spline bins %d epochs training: "%(sharpness, spl_bins, n_ep)+str(time.process_time() - start))
 
 # allSamples = []
 # #split into 100 chunks
