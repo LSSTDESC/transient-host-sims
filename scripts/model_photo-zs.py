@@ -7,8 +7,21 @@ from pzflow.distributions import Tdist, Uniform, Joint, Normal
 import pandas as pd
 import GCRCatalogs
 import numpy as onp
+import os
 import time
 import seaborn as sns
+
+sharpnesses =[2]
+spl_binses = [4,8,16]
+n_eps = [100]
+params = [(sh, sp, n) for sh in sharpnesses for sp in spl_binses for n in n_eps]
+print(len(params))
+# sys.exit(0)
+idx = int(os.getenv('SLURM_ARRAY_TASK_ID', '0'))
+sharpness, spl_bins, n_ep = params[idx]
+
+print(params[idx])
+
 start = time.process_time()
 
 # def f(logmass):
@@ -44,6 +57,7 @@ z_col = 0
 # data['logSFRtot'] = onp.log10(data['totalStarFormationRate'])
 # data['logmass']   = onp.log10(data['stellar_mass'])
 # data.drop(columns=['totalStarFormationRate', 'stellar_mass'], inplace=True)
+
 conditional_columns = data.columns.drop(['redshift'])
 print("Original conditional columns:", conditional_columns)
 
@@ -62,15 +76,17 @@ data_scaled = data.copy()
 for i in range(len(quantities)-2):
     data_scaled[quantities[i+1]+'-'+quantities[i+2]] = data[quantities[i+1]] - data[quantities[i+2]]
 data_scaled = data_scaled.drop(columns=conditional_columns)
+print(data_scaled.columns)
 
-mean = data['r'].mean()
-std = data['r'].std()
-print('rmags normed by N(%d, %d)'%(mean, std))
-print('TODO: normalize rmag')
-data_scaled['r'] = (data['r'] - mean) / std
+# mean = data['r'].mean()
+# std = data['r'].std()
+# print('rmags normed by N(%.3f, %.3f)'%(mean, std))
+# print('TODO: normalize rmag')
+data_scaled['r'] = data['r']#(data['r'] - mean) / std
 ### TODO: may need to rescale the one magnitude
-conditional_columns = data_scaled.columns.drop(['redshift'])
-print("Scaled conditional columns:", conditional_columns)
+# conditional_columns = data_scaled.columns.drop(['redshift'])
+# print("Scaled conditional columns:", conditional_columns)
+print(data_scaled.columns)
 
 # standard scale the reference magnitude and colors, but keep an copy of the original
 # data_scaled = data.copy()
@@ -78,8 +94,10 @@ print("Scaled conditional columns:", conditional_columns)
 #     # 'logmass', 'logSFRtot', 
 #                 'mag_true_u_lsst', 'mag_true_g_lsst', 'mag_true_r_lsst', 'mag_true_i_lsst', 'mag_true_z_lsst', 'mag_true_y_lsst']:
 #     data_scaled[quality] = (data[quality]-data[quality].mean())/data[quality].std()
-means = data['redshift'].mean()
-stds = data['redshift'].std()
+# means = data['redshift'].mean()
+# stds = data['redshift'].std()
+means = data_scaled.mean(axis=0).values
+stds = data_scaled.std(axis=0).values
 
 # take a subset of 1/500th
 # have tried 1/1000, 1/100,
@@ -92,17 +110,22 @@ print('Training on {} CosmoDC2 galaxies.'.format(len(data_subset)))
 # mins = np.array([0])
 # maxs = np.array([data_subset['redshift'].max()+0.1])
 # latent = Uniform((-5, 5))
-latent = Tdist(input_dim=1)
+# latent = Tdist(input_dim=1)
+# latent = Joint(Uniform((0., 3), [one for each color], [r-band mag]))  (replaces InvSoftPlus)
 
 ### TODO: vary these between runs
-sharpness = 5#10
-spl_bins = 8#2
+### iterate over sharpness = 1, 3, 10, 30
+# sharpness = 5#10
+### iterate over spl_bins = 2, 4, 8, 16, 32
+# spl_bins = 8#2
+# B = 5 <-- vary this
+# spl_bins increase to broaden posteriors
 
 bijector = Chain(
     InvSoftplus(z_col, sharpness),
     StandardScaler(means, stds),
     # ShiftBounds(mins, maxs, 5),
-    RollingSplineCoupling(nlayers=1, n_conditions=6, K=spl_bins),
+    RollingSplineCoupling(nlayers=7, K=spl_bins),#1, n_conditions=6, K=spl_bins),
 )
 
 # To create the conditional flow, we have to provide
@@ -111,15 +134,16 @@ bijector = Chain(
 # 3. The names of the conditional columns
 
 flow = Flow(
-    data_columns = ['redshift'],
-    conditional_columns = conditional_columns,
+    data_columns = data_scaled.columns,#['redshift'],
+    # conditional_columns = conditional_columns,
     bijector = bijector,
-    latent = latent,          
+    # latent = latent,          
 )
 
 
 ### TODO: try more epochs
-n_ep = 100#30
+### iterate over n_ep = 30, 100, 300, 1000
+# n_ep = 100#30
 
 losses = flow.train(data_subset, epochs=n_ep, verbose=True)
 
