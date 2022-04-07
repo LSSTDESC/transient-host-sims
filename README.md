@@ -8,5 +8,6 @@ This repository contains the code and data used for simulating transients and th
 5. Add photometric features for the matched cosmoDC2 galaxies by running scripts/addPZFeatures.py.
 6. Construct the HOSTLIBS for these classes with notebooks/construct_hostlib.ipynb.
 7. Separately construct the random HOSTLIB for a random subset of cosmoDC2 by running random_hostcat.py.
+8. Generate the weightmaps for fine-tuned transient-host galaxy correlations with scripts/weightmap_generator.py.
 
 Please contact Martine Lokken (lokken@astro.utoronto.ca) and Alex Gagliano (gaglian2@illinois.edu) with any questions or comments.
