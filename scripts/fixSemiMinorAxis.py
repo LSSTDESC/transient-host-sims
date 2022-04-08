@@ -52,7 +52,7 @@ for mode in modes:
     else:
         modestr = mode
 
-    cdc2_wRSQ = pd.read_csv('/global/cscratch1/sd/agaglian/matchedSamples_0407/cdc2_matched_ghost_%s_z3_unq_zwgt_5pct_k%i_SFRMsolRSQ.tar.gz'.format(modestr, n_neigh)
+    cdc2_wRSQ = pd.read_csv('/global/cscratch1/sd/agaglian/matchedSamples_0407/cdc2_matched_ghost_%s_z3_unq_zwgt_5pct_k%i_SFRMsolRSQ.tar.gz' % (modestr, n_neigh))
 
     cdc2_wRSQ['size_minor_bulge_true_fixed'] = fix_size_minor(cdc2_wRSQ['size_bulge_true'], cdc2_wRSQ['size_minor_bulge_true'])
     cdc2_wRSQ['size_minor_disk_true_fixed'] = fix_size_minor(cdc2_wRSQ['size_disk_true'], cdc2_wRSQ['size_minor_disk_true'])
@@ -68,7 +68,7 @@ for mode in modes:
                             
     print("Done fixing minor columns.")
                             
-    cdc2_wRSQ.to_csv('/global/cscratch1/sd/agaglian/matchedSamples_0407/cdc2_matched_ghost_%s_z3_unq_zwgt_5pct_k%i_SFRMsolRSQ_fixedMinor.tar.gz'.format(modestr, n_neigh), index=False)
+    cdc2_wRSQ.to_csv('/global/cscratch1/sd/agaglian/matchedSamples_0407/cdc2_matched_ghost_%s_z3_unq_zwgt_5pct_k%i_SFRMsolRSQ_fixedMinor.tar.gz' % (modestr, n_neigh), index=False)
 
 end = time.time()
 

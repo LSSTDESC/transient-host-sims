@@ -49,7 +49,7 @@ for mode in modes:
     else:
         modestr = mode
 
-    cdc2_nbrs = pd.read_csv('/global/cscratch1/sd/agaglian/matchedSamples_0407/cdc2_matched_ghost_%s_z3_unq_zwgt_5pct_k%i_SFRMsol.tar.gz'.format(modestr, n_neigh))
+    cdc2_nbrs = pd.read_csv('/global/cscratch1/sd/agaglian/matchedSamples_0407/cdc2_matched_ghost_%s_z3_unq_zwgt_5pct_k%i_SFRMsol.tar.gz' % (modestr, n_neigh))
     cdc2_wRSQ = df_Image.merge(cdc2_nbrs, on='galaxy_id')
     
     cdc2_wRSQ.rename(columns={"RSQ_pixel_gal":"RSQ"}, inplace=True)
@@ -57,7 +57,7 @@ for mode in modes:
     print("Done. Here's a sneak peek at the catalog:")
     print(cdc2_wRSQ.head())
 
-    cdc2_wRSQ.to_csv('/global/cscratch1/sd/agaglian/matchedSamples_0407/cdc2_matched_ghost_%s_z3_unq_zwgt_5pct_k%i_SFRMsolRSQ.tar.gz'.format(modestr, n_neigh), index=False)
+    cdc2_wRSQ.to_csv('/global/cscratch1/sd/agaglian/matchedSamples_0407/cdc2_matched_ghost_%s_z3_unq_zwgt_5pct_k%i_SFRMsolRSQ.tar.gz' % (modestr, n_neigh), index=False)
 
 end = time.time()
 
