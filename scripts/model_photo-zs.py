@@ -11,9 +11,9 @@ import os
 import time
 import seaborn as sns
 
-sharpnesses =[2]
-spl_binses = [4,8,16]
-n_eps = [100]
+sharpnesses =[1]
+spl_binses = [8]#, 16, 32, 64]
+n_eps = [30]#[100]
 params = [(sh, sp, n) for sh in sharpnesses for sp in spl_binses for n in n_eps]
 print(len(params))
 # sys.exit(0)
@@ -99,6 +99,10 @@ print(data_scaled.columns)
 means = data_scaled.mean(axis=0).values
 stds = data_scaled.std(axis=0).values
 
+mins = [0, -1, -1, -1, -1, -1, 15]
+maxs = [3, 5, 5, 5, 5, 5, 35]
+# B = 5
+
 # take a subset of 1/500th
 # have tried 1/1000, 1/100,
 subset_size = int(len(data_scaled) / 1.e3)
@@ -109,22 +113,22 @@ print('Training on {} CosmoDC2 galaxies.'.format(len(data_subset)))
 
 # mins = np.array([0])
 # maxs = np.array([data_subset['redshift'].max()+0.1])
-# latent = Uniform((-5, 5))
+latent = Uniform((-5, 5))
 # latent = Tdist(input_dim=1)
-# latent = Joint(Uniform((0., 3), [one for each color], [r-band mag]))  (replaces InvSoftPlus)
+# latent = Joint(Uniform((0., 3.), (-1., 5.), (-1., 5.), (-1., 5.), (-1., 5.), (-1., 5.), (15, 35)))
 
 ### TODO: vary these between runs
 ### iterate over sharpness = 1, 3, 10, 30
 # sharpness = 5#10
 ### iterate over spl_bins = 2, 4, 8, 16, 32
 # spl_bins = 8#2
-# B = 5 <-- vary this
+# B = 5 <-- vary this, something to do with spacing of spline bins?
 # spl_bins increase to broaden posteriors
 
 bijector = Chain(
-    InvSoftplus(z_col, sharpness),
-    StandardScaler(means, stds),
-    # ShiftBounds(mins, maxs, 5),
+    # InvSoftplus(z_col, sharpness),
+    # StandardScaler(means, stds),
+    ShiftBounds(mins, maxs, B=5),
     RollingSplineCoupling(nlayers=7, K=spl_bins),#1, n_conditions=6, K=spl_bins),
 )
 
@@ -137,7 +141,7 @@ flow = Flow(
     data_columns = data_scaled.columns,#['redshift'],
     # conditional_columns = conditional_columns,
     bijector = bijector,
-    # latent = latent,          
+    latent = latent,          
 )
 
 
@@ -151,12 +155,12 @@ sns.set_context("talk")
 plt.plot(losses)
 plt.xlabel("Epoch")
 plt.ylabel("Training loss")
-plt.savefig("../plots/model_photo-zs_sharp%d_splbin%d_epoch%d_traning_loss.png" % (sharpness, spl_bins, n_ep))
+plt.savefig("../plots/model_photo-zs_uniform_splbin%d_epoch%d_traning_loss.png" % (spl_bins, n_ep))
 
 plt.clf()
 # save the results, then apply them with the script apply_pzflow_dc2full.py
-flow.save('../data_files/model_photo-zs_sharp%d_splbin%d_epoch%d_flow.pkl' % (sharpness, spl_bins, n_ep))
-print("time taken for %d sharpness %d spline bins %d epochs training: "%(sharpness, spl_bins, n_ep)+str(time.process_time() - start))
+flow.save('../data_files/model_photo-zs_uniform_splbin%d_epoch%d_flow.pkl' % (spl_bins, n_ep))
+print("time taken for uniform latent %d spline bins %d epochs training: "%(spl_bins, n_ep)+str(time.process_time() - start))
 
 # allSamples = []
 # #split into 100 chunks
