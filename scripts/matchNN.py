@@ -34,8 +34,7 @@ else:
 
 def nn(gal):
     u = AnnoyIndex(dimension, 'euclidean')
-    #u.load('/global/cscratch1/sd/agaglian/build_cdc2.ann') # super fast, will just mmap the file
-    u.load("/global/cscratch1/sd/mlokken/sn_hostenv/build_cdc2_euclidean_z3_31healpix_updMag.ann")
+    u.load("/global/cscratch1/sd/mlokken/sn_hostenv/build_cdc2_euclidean_z3_31healpix_updMag.ann")  # super fast, will just mmap the file
 
     # Get nearest neighbours
     N = u.get_nns_by_vector(gal, n_neigh, search_k=-1, include_distances=True)

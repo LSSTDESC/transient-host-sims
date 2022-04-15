@@ -28,14 +28,9 @@ else:
     tot = 5000
 
 start = time.time()
-#modes = np.array(['SN Ia', 'SN II', 'SLSN-I', 'SN IIP', 'SN IIb', 'SN IIn', 'SN Ib', 'SN Ic', 'SN Ibc'])
 modes = np.array(['SN Ia', 'SN II', 'SN Ibc'])
 
-#neigh_dict = {'SN Ia':407, 'SN II':1040, 'SN Ibc':8902}
-#neigh_dict = {'SN Ia':815, 'SN II':2081, 'SN Ibc':17804}
-neigh_dict = {'SN Ia':678, 'SN II':3147, 'SN Ibc':9508}
-#neigh_dict = {'SN Ia':1356, 'SN II':6295, 'SN Ibc':19017}
-#neigh_dict = {'SN Ia':381, 'SN II':1282, 'SLSN-I':103448, 'SN IIP':10791, 'SN IIb':34482, 'SN IIn':12448, 'SN Ib':21582, 'SN Ic':14354, 'SN Ibc':7957}
+neigh_dict = {'SN Ia':2211, 'SN II':6984, 'SN Ibc':39473}
 
 if full:
     cosmo = GCRCatalogs.load_catalog("cosmoDC2_v1.1.4")
