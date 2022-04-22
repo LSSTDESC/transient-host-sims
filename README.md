@@ -1,5 +1,5 @@
 # Transient-Host Galaxy Simulations
-This repository contains the code and data used for simulating transients and their host galaxies for PLAsTiCC version 2. Our pipeline uses the code SNANA (Kessler+2009) for simulating transients, and is described in detail in Lokken and Gagliano, 2022 (in prep). The methodology for constructing our hostlibs for SNe Ia, SNe II, and SNe Ib/c (requires access to cosmoDC2 through GCRCatalogs) is outlined as follows:
+This repository contains the code used to genenerate the Synthetic Catalog of Optical Transients and Correlated Hosts (SCOTCH). Our pipeline uses the code SNANA (Kessler+2009) for simulating transients, and is described in detail in Lokken and Gagliano, 2022 (currently in DESC internal review). The methodology for constructing our hostlibs for SNe Ia, SNe II, and SNe Ib/c (requires access to cosmoDC2 through GCRCatalogs) is outlined as follows:
 
 1. Use a normalizing flow (pzflow) to smooth out cosmoDC2 catalog redshifts by running scripts/apply_pzflow_dc2full.py.
 2. Create the index of cosmoDC2 galaxies, and normalize GHOST + cosmoDC2 catalogues, by running scripts/buildANN.py.
@@ -12,4 +12,4 @@ This repository contains the code and data used for simulating transients and th
 9. If needed, add gaussian smearing to the catalog-level photometry using notetbooks/AddHostlibScatter.ipynb (we do this to create a HOSTLIB for kilonovae).
 10. Generate the weightmaps for fine-tuned transient-host galaxy correlations with scripts/weightmap_generator.py.
 
-Please contact Martine Lokken (lokken@astro.utoronto.ca) and Alex Gagliano (gaglian2@illinois.edu) with any questions or comments.
+If you'd just like to learn how to use the SCOTCH catalogue, check out `notebooks/SCOTCH_walkthroughs.ipynb`. Please contact Martine Lokken (lokken@astro.utoronto.ca) and Alex Gagliano (gaglian2@illinois.edu) with any questions or comments.
