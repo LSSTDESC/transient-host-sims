@@ -21,43 +21,43 @@ import multiprocessing as mp
 import sys
 
 start = time.time()
+modes = np.array(['SN Ia', 'SN II', 'SN Ibc'])
+
+#modes = np.array(['rand'])
+#neigh_dict = {'rand':0}
+
+neigh_dict = {'SN Ia':2211, 'SN II':6984, 'SN Ibc':39473}
 
 cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
 
-#df_sdss_comb = pd.read_csv("/global/cscratch1/sd/agaglian/DC2full_pzRedshifts_tenHealpix_sdss_updMag.tar.gz")
-df_sdss_comb = pd.read_csv("/global/cscratch1/sd/agaglian/DC2full_pzRedshifts_tenHealpix_secondSet_sdss_updMag.tar.gz")
-
 print("Starting the catalog loading!")
-#combine with the image catalog and get physical radius values
+#combine with the image catalog and get RSQ
 df_Image = pd.read_csv("/global/cscratch1/sd/agaglian/FullImageMomentsCatalog.tar.gz", usecols=['cosmoDC2_ID', 'RSQ_pixel_gal'])
 df_Image['galaxy_id'] = df_Image['cosmoDC2_ID']
-print("Length of sdss df is", len(df_sdss_comb))
 print(np.sort(df_Image['galaxy_id']))
-print(np.sort(df_sdss_comb['galaxy_id']))
 
 print("Length of the DF_Image catalog is", len(df_Image))
 del df_Image['cosmoDC2_ID']
 print("Merging with the image moments catalog")
 
-df_sdss_wImg = df_Image.merge(df_sdss_comb, on='galaxy_id')
-#df_sdss_wImg = df_sdss_comb.merge(df_Image, on='galaxy_id', how='outer')
-df_sdss_wImg.dropna(subset=['DC2redshift'], inplace=True)
+for mode in modes:
+    print("Running for %s" % mode)
+    n_neigh = neigh_dict[mode]
 
-print(len(df_sdss_wImg))
+    if ' ' in mode:
+        modestr = mode.replace(' ','')
+    else:
+        modestr = mode
 
-print("Calculating the size of each galaxy...")
+    cdc2_nbrs = pd.read_csv('/global/cscratch1/sd/agaglian/matchedSamples_0407/cdc2_matched_ghost_%s_z3_unq_zwgt_5pct_k%i_SFRMsol.tar.gz' % (modestr, n_neigh))
+    cdc2_wRSQ = df_Image.merge(cdc2_nbrs, on='galaxy_id')
+    
+    cdc2_wRSQ.rename(columns={"RSQ_pixel_gal":"RSQ"}, inplace=True)
+    
+    print("Done. Here's a sneak peek at the catalog:")
+    print(cdc2_wRSQ.head())
 
-#first take sqrt(RSQ) to get R in px, then convert to arcsec, then convert to physical distance using the following formula:
-#(angle in arcsec)/206265 = d/D ---> d = (angle in arcsec * luminosity distance)/206265 (divide by 1.e3 to get kpc)
-df_sdss_wImg['R_kpc'] = np.sqrt(df_sdss_wImg['RSQ_pixel_gal'])*0.2 * cosmo.luminosity_distance(df_sdss_wImg['PZflowredshift']).to(u.pc).value/206265./1.e3
-
-# get rid of this column and save the full catalog
-del df_sdss_wImg['RSQ_pixel_gal']
-
-print("Done. Saving! Here's a sneak peek at the catalog:")
-print(df_sdss_wImg.head())
-
-df_sdss_wImg.to_csv("/global/cscratch1/sd/agaglian/DC2full_pzRedshifts_tenHealpix_sdss_updMag_Rkpc_secondSet.tar.gz",index=False)
+    cdc2_wRSQ.to_csv('/global/cscratch1/sd/agaglian/matchedSamples_0407/cdc2_matched_ghost_%s_z3_unq_zwgt_5pct_k%i_SFRMsolRSQ.tar.gz' % (modestr, n_neigh), index=False)
 
 end = time.time()
 

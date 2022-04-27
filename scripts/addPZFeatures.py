@@ -29,17 +29,9 @@ if full:
 else:
     tot = 5000
 
-#modes = np.array(['SN Ia', 'SN II', 'SLSN-I', 'SN IIP', 'SN IIb', 'SN IIn', 'SN Ib', 'SN Ic', 'SN Ibc'])
-#modes = np.array(['SN Ia', 'SN II', 'SN Ibc'])
+modes = np.array(['SN Ia', 'SN II', 'SN Ibc'])
 
-#neigh_dict = {'SN Ia':407, 'SN II':1040, 'SN Ibc':8902}
-
-#modes = np.array(['SN Ia', 'SN II', 'SN Ibc'])
-modes = np.array(['SN Ibc'])
-
-#neigh_dict = {'SN Ia':815, 'SN II':2081, 'SN Ibc':17804}
-neigh_dict = {'SN Ia':1356, 'SN II':6295, 'SN Ibc':19017}
-
+neigh_dict = {'SN Ia':2211, 'SN II':6984, 'SN Ibc':39473}
 
 # read in file of CosmoDC2 galaxies, with PZFlow SFR and redshifts, limited to abs r-band magnitude < -15
 # and -0.18 < i-z < 0.5
@@ -97,8 +89,6 @@ cdc2_pz['mag_err_z_photoz']  = np.concatenate(magerr_z)
 cdc2_pz['mag_err_y_photoz']  = np.concatenate(magerr_y)
 
 cdc2_pz = pd.DataFrame(cdc2_pz)
-
-#neigh_dict = {'SN Ia':381, 'SN II':1282, 'SLSN-I':103448, 'SN IIP':10791, 'SN IIb':34482, 'SN IIn':12448, 'SN Ib':21582, 'SN Ic':14354, 'SN Ibc':7957}
 
 for mode in modes:
     print("Running for %s" % mode)

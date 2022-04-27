@@ -14,16 +14,15 @@ import matplotlib
 import time
 import seaborn as sns
 from collections import Counter
-from nearpy import Engine
-from nearpy.hashes import RandomBinaryProjections
-from nearpy.filters import NearestFilter, UniqueFilter
-from nearpy.distances import EuclideanDistance
+# from nearpy import Engine
+# from nearpy.hashes import RandomBinaryProjections
+# from nearpy.filters import NearestFilter, UniqueFilter
+# from nearpy.distances import EuclideanDistance
 from sklearn.preprocessing import StandardScaler
 import numpy.ma as ma
 import multiprocessing as mp
 import sys
 
-plotting = False
 full = True
 
 print("Starting our matching sequence!") 
@@ -35,8 +34,7 @@ else:
 
 def nn(gal):
     u = AnnoyIndex(dimension, 'euclidean')
-    #u.load('/global/cscratch1/sd/agaglian/build_cdc2.ann') # super fast, will just mmap the file
-    u.load("/global/cscratch1/sd/agaglian/build_cdc2_euclidean_z3_20healpix_updMag.ann")
+    u.load("/global/cscratch1/sd/mlokken/sn_hostenv/build_cdc2_euclidean_z3_31healpix_updMag.ann")  # super fast, will just mmap the file
 
     # Get nearest neighbours
     N = u.get_nns_by_vector(gal, n_neigh, search_k=-1, include_distances=True)
@@ -50,11 +48,11 @@ def min_max_normalize(feature, feature_name):
     plt.clf()
     return(norm_feature)
 
-#fn = '/global/homes/a/agaglian/data_files/GHOST_restFrame_condenseLabels_0323.tar.gz'
+
 fn = "./ghost_scaled.csv"
 ghost_orig = pd.read_csv(fn, memory_map=True, low_memory=True)
-#fn = '/global/homes/a/agaglian/data_files/GHOST_restFrame_condenseLabels_0323.tar.gz'
-fn = '/global/cscratch1/sd/agaglian/GHOSTwithImageSizes.csv'
+# fn = '/global/cscratch1/sd/agaglian/GHOSTwithImageSizes.csv'
+fn = '../data_files/GHOST_flagCuts_restFrame.csv'
 ghost_full = pd.read_csv(fn, memory_map=True, low_memory=True)
 #og_ghost_idx = np.arange(len(ghost_full))
 #og_ghost_idx = ghost_orig['og_idx']
@@ -62,14 +60,14 @@ ghost_full = pd.read_csv(fn, memory_map=True, low_memory=True)
 #!/global/common/software/lsst/common/miniconda/current/envs/stack/bin/python
 # set mode: which class from which to match the hosts
 
-#modes = np.array(['SN Ia', 'SN II', 'SLSN-I', 'SN IIP', 'SN IIb', 'SN IIn', 'SN Ib', 'SN Ic', 'SN Ibc'])
 modes = np.array(['SN Ia', 'SN II', 'SN Ibc'])
 
 # read in file of CosmoDC2 galaxies, with PZFlow SFR and redshifts, limited to abs r-band magnitude < -15
 # and -0.18 < i-z < 0.5
 
 if full:
-    cdc2 = pd.read_csv("/global/cscratch1/sd/agaglian/DC2full_pzRedshifts_twentyHealpix_sdss_updMag_Rkpc_Final.tar.gz", memory_map=True, low_memory=True)
+    # cdc2 = pd.read_csv("/global/cscratch1/sd/agaglian/DC2full_pzRedshifts_twentyHealpix_sdss_updMag_Rkpc_Final.tar.gz", memory_map=True, low_memory=True)
+    cdc2 = pd.read_csv("/global/cscratch1/sd/mlokken/sn_hostenv/DC2full_pzRedshifts_31Healpix_sdss_updMag_Rkpc_Final.tar.gz")
     print("Loaded pzflow-oversampled catalog")
 else:
     cdc2 = pd.read_csv("/global/cscratch1/sd/mlokken/sn_hostenv/DC2_pzRedshifts_SFR_RMag_lt_neg15.csv", memory_map=True, low_memory=True)
@@ -112,101 +110,16 @@ for mode in modes:
         modestr = mode.replace(' ','')
 
     if mode == 'SN II':
-        a = ghost_orig['TransientClass']==mode
-        b = ghost_orig['TransientClass']=='SN IIP'
-        c = ghost_orig['TransientClass']=='SN IIb'
-        d = ghost_orig['TransientClass']=='SN IIn'
-        ghost = ghost_orig[np.logical_or(np.logical_or(np.logical_or(a,b),c), d)]
+        ghost = ghost_orig[ghost_orig['TransientClass'].isin(['SN II', 'SN IIP', 'SN IIn'])]
     elif mode == 'SN Ibc':
-        a = ghost_orig['TransientClass'] == 'SN Ib'
-        b = ghost_orig['TransientClass'] == 'SN Ic'
-        c = ghost_orig['TransientClass'] == 'SLSN-I' # lump in SLSN hosts because there are too few of them for it to be its own hostlib
-        ghost = ghost_orig[ghost_orig['TransientClass'].isin(['SN Ib', 'SN Ib/c', 'SN Ic', 'SNIbc', 'SNIb/c', 'SLSN-I'])]
-#        ghost = ghost_orig[np.logical_or(np.logical_or(a,b),c)]
-    else:
-        ghost = ghost_orig[ghost_orig['TransientClass']==mode]
+        # lump in SLSN hosts because there are too few of them for it to be its own hostlib
+        ghost = ghost_orig[ghost_orig['TransientClass'].isin(['SN Ib', 'SN Ic', 'SN Ib/c', 'SN IIb', 'SN Ic', 'SNIbc', 'SNIb/c', 'SLSN-I', 'SLSN'])]
+    elif mode == 'SN Ia':
+        ghost = ghost_orig[ghost_orig['TransientClass'].isin(['SN Ia', 'SN Ia Pec'])]
     og_ghost_idx = ghost['og_idx'].values
-
-    #ghost.reset_index(inplace=True, drop=True)
-    #print("Number of {:s}: {:d}".format(mode,len(ghost)))
-    #transient_class = ghost['TransientClass']
-    #gMag_G = ghost['gKronMag_SDSS_abs']
-    #gMag_R = ghost['rKronMag_SDSS_abs']
-    #gMag_I = ghost['iKronMag_SDSS_abs']
-    #gMag_Z = ghost['zKronMag_SDSS_abs']
-    #g_rshift = ghost['NED_redshift']
-    #g_rshift2 = ghost['TransientRedshift']
-    #g_ellip  = ghost['r_ellip']
-    #g_gr   = ghost['g-r_SDSS_rest']
-    #g_ri   = ghost['r-i_SDSS_rest']
-    #g_iz   = ghost['i-z_SDSS_rest']
-
-    ## keep track of indices from original file
-    #og_ghost_idx = np.arange(len(ghost))
-    #keydata = np.vstack((gMag_G, gMag_R, gMag_I, gMag_Z, g_gr, g_ri, g_iz, g_ellip, g_rshift, g_rshift2)).T
-    ## first remove all -999s:
-    #keydata[np.logical_or(keydata<-50,keydata>100)] = np.nan
-    ## get rid of redshifts with nan
-    #delete_znans = []
-    #z_nans = 0
-    #for i in range(len(keydata)):
-    #    if np.isnan(keydata[i,8]):
-    #        z_nans += 1
-    #for i in range(len(keydata)):
-    #    if np.isnan(keydata[i,8]):
-    #        # if transient redshift is not nan, replace with transient redshift
-    #        if not np.isnan(keydata[i,9]):
-    #            keydata[i,8] = keydata[i,9]
-    #        else:
-    #            delete_znans.append(i)
-    #    if keydata[i,8] <= 0:
-    #        delete_znans.append(i)
-    #keydata = np.delete(keydata, delete_znans, axis=0)
-    #og_ghost_idx = np.delete(og_ghost_idx, delete_znans)
-    #delete_rows = []
-    ## delete rows with more than one nan
-    #for i in range(len(keydata)):
-    #    if np.isnan(np.sum(keydata[i])):
-    #        nan_counter = 0
-    #        for j in range(1, len(keydata[i])):
-    #            if np.isnan(keydata[i,j]):
-    #                nan_counter+=1
-    #        if nan_counter > 1:
-    #            delete_rows.append(i)
-    #keydata = np.delete(keydata, delete_rows, axis=0)
-    #og_ghost_idx = np.delete(og_ghost_idx, delete_rows)
-    ## finally for rows with just one nan, replace with the average value
-    #for i in range(len(keydata)):
-    #    if np.isnan(np.sum(keydata[i])):
-    #        for j in range(1, len(keydata[i])):
-    #            if np.isnan(keydata[i,j]):
-    #                keydata[i,j] = np.nanmean(keydata[:,j])
-    #gG = keydata[:,0]
-    #gR = keydata[:,1]
-    #gI = keydata[:,2]
-    #gZ = keydata[:,3]
-    #g_gr = keydata[:,4]
-    #g_ri   = keydata[:,5]
-    #g_iz   = keydata[:,6]
-    #g_ellip = keydata[:,7]
-    #g_rshift = keydata[:,8]
-
-    #data_keyparams= np.vstack((gR, gI, g_gr, g_iz, g_ellip, g_rshift)).T
-
-    ## normalize for knn
-    ## The purpose of is this is so that the nearest-neighbors algorithm is searching in a multidimensional space
-    ## where typical distances are similar in all dimensions
-    ##ghost_cdc2 = np.vstack((data_keyparams, sim_keyparams))
-    #scaler = StandardScaler()
-    ##scaler.fit(ghost_cdc2)
-    #scaler.fit(data_keyparams)
-    #data_keyparams_norm = scaler.transform(data_keyparams)
-    data_keyparams_norm = np.array(ghost[['R', 'I', 'g-r', 'i-z', 'redshift']]) #'ellipticity', 
-    #load up the ghost database here!! 
-
-    #data_keyparams_norm = keyparams_norm[0:len(data_keyparams[:,0]),:]
-    #sim_keyparams_norm  = keyparams_norm[len(data_keyparams[:,0]):,:]
-
+    # ghost is already normalized, as read from ghost_scaled.csv
+    data_keyparams_norm = np.array(ghost[['R', 'I', 'g-r', 'i-z', 'redshift']])
+    
     # Weight redshift
     data_keyparams_norm[:,4]/=div
 
@@ -240,10 +153,8 @@ for mode in modes:
     simI_reshaped  = (sim_keyparams[:,1][indices.flatten()]).reshape(sim_idx_shape)
     simgr_reshaped  = (sim_keyparams[:,2][indices.flatten()]).reshape(sim_idx_shape)
     simiz_reshaped  = (sim_keyparams[:,3][indices.flatten()]).reshape(sim_idx_shape)
-    #sime_reshaped  = (sim_keyparams[:,4][indices.flatten()]).reshape(sim_idx_shape)
     simrshift_reshaped  = (sim_keyparams[:,4][indices.flatten()]).reshape(sim_idx_shape)
                         
-    #sime_reshaped[j][m],
     for j in range(len(simR_reshaped)):
         for m in range(simR_reshaped.shape[1]):
             line_to_add = np.array((simR_reshaped[j][m],simI_reshaped[j][m],simgr_reshaped[j][m],simiz_reshaped[j][m], simrshift_reshaped[j][m], og_ghost_idx[j],dist[j][m]))
@@ -273,45 +184,6 @@ for mode in modes:
     cdc2_matched_nn.reset_index(inplace=True, drop=True)
     cdc2_matched_nn.to_csv("/global/cscratch1/sd/agaglian/matchedDC2_euclid_z3_%s_%i.tar.gz" % (modestr, n_neigh), index=False)
 
-    if plotting:
-        if not os.path.exists('../plots/{:s}'.format(modestr)):
-            os.mkdir('../plots/{:s}'.format(modestr))
-        sns.set_context("poster")
-        fig, ax = plt.subplots(nrows=2,ncols=1, figsize=[10,10], sharex=True)
-        ax[0].hist(ghost['TransientRedshift'],bins=40, alpha=0.5, color='blue', label='GHOST, {:d} total'.format(len(data_keyparams)))
-        ax[1].hist(cdc2['PZflowredshift'][save_array_uniques[:,0]],bins=40,alpha=0.5, color='orange', label='CosmoDC2, {:d} total'.format(len(save_array_uniques)))
-        plt.xlabel("redshift")
-        plt.legend()
-        ax[0].set_ylabel("Number of galaxies")
-        ax[1].set_ylabel("Number of galaxies")
-        ax[1].ticklabel_format(axis='y', style='sci')
-        ax[0].legend()
-        plt.savefig("../plots/{0}/cdc2_ghost_{0}_k10_z3_weighting_matches_unq_histogram.png".format(modestr))
-
-        # check all properties against each other for CosmoDC2
-        labels=['R', 'I', 'g-r', 'i-z',  'redshift']#'ellipticity',
-        lims =[[-25,-14.5],[-25,-14.5],[-0.3,1.2],[-0.2,0.5],[0,3]]#[0,0.4],
-        for i in range(6):
-            for j in range(6):
-                if i!=j:
-                    fig,ax = plt.subplots(nrows=2,ncols=1,figsize=[7,10],sharex=True)
-                    im2=ax[1].scatter(data_keyparams[:,j],data_keyparams[:,i],c=dist[:,0], cmap='plasma_r', alpha=0.5, s=1, vmin=0, vmax=3)
-                    im1=ax[0].scatter(check_array_uniques[:,j],check_array_uniques[:,i],c=check_array_uniques[:,7], cmap='plasma_r', alpha=0.2, s=1, vmin=0, vmax=3)
-                    ax[1].set_xlabel(labels[j])
-                    ax[0].set_ylabel(labels[i])
-                    ax[1].set_ylabel(labels[i])
-                    ax[0].set_title("CDC2 matched gals")
-                    ax[1].set_title("GHOST")
-                    fig.subplots_adjust(right=0.8)
-                    cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
-                    cbar = fig.colorbar(im1, cax=cbar_ax)
-                    cbar.set_label("distance")
-                    ax[0].set_xlim(lims[j])
-                    ax[1].set_xlim(lims[j])
-                    ax[1].set_ylim(lims[i])
-                    ax[0].set_ylim(lims[i])
-                    plt.savefig("../plots/{:s}/ghost_cdc2_k10_z3_weighting_unq_{:s}_vs_{:s}_{:s}.png".format(modestr,labels[i],labels[j],modestr), bbox_inches='tight')
-                    plt.clf()
 
 end = time.time()
 elapsed = end - start

@@ -1,11 +1,8 @@
 #!/global/common/software/lsst/common/miniconda/current/envs/stack/bin/python
 # set mode: which class from which to match the hosts
 import sys
-from sklearn.neighbors import NearestNeighbors
 import numpy as np
 from matplotlib import pyplot as plt
-import os
-import GCRCatalogs
 from astropy.io import fits
 import pandas as pd
 from astropy.cosmology import Planck15 as P15
@@ -17,7 +14,6 @@ from itertools import product
 from collections import Counter
 print("Made it into the file!")
 from sklearn.preprocessing import StandardScaler
-import numpy.ma as ma
 import multiprocessing as mp
 import sys
 
@@ -29,7 +25,7 @@ if full:
 else:
     tot = 5000
 
-fn = '/global/cscratch1/sd/agaglian/GHOSTwithImageSizes.csv'
+fn = '../data_files/GHOST_flagCuts_restFrame.csv'
 ghost = pd.read_csv(fn)
 
 transient_class = ghost['TransientClass']
@@ -39,15 +35,14 @@ gMag_I = ghost['iKronMag_SDSS_abs']
 gMag_Z = ghost['zKronMag_SDSS_abs']
 g_rshift = ghost['NED_redshift']
 g_rshift2 = ghost['TransientRedshift']
-#g_ellip  = ghost['r_ellip']
 g_gr   = ghost['g-r_SDSS_rest']
 g_ri   = ghost['r-i_SDSS_rest']
 g_iz   = ghost['i-z_SDSS_rest']
-#g_Rkpc = np.sqrt(np.nanmean([ghost['gR_kpc']**2, ghost['rR_kpc']**2, ghost['iR_kpc']**2, ghost['zR_kpc']**2, ghost['yR_kpc']**2], axis=0)) # radius in kpc, averaged across bands
+
 
 # keep track of indices from original file
 og_ghost_idx = np.arange(len(ghost))
-keydata = np.vstack((gMag_G, gMag_R, gMag_I, gMag_Z, g_gr, g_ri, g_iz, g_rshift, g_rshift2)).T #g_Rkpc, 
+keydata = np.vstack((gMag_G, gMag_R, gMag_I, gMag_Z, g_gr, g_ri, g_iz, g_rshift, g_rshift2)).T  
 # first remove all -999s:
 keydata[np.logical_or(keydata<-50,keydata>100)] = np.nan
 # get rid of redshifts with nan
@@ -93,7 +88,6 @@ gZ = keydata[:,3]
 g_gr = keydata[:,4]
 g_ri   = keydata[:,5]
 g_iz   = keydata[:,6]
-#g_Rkpc = keydata[:,7]
 g_rshift = keydata[:,7]
 ghost_objIDs = ghost['objID'].values[og_ghost_idx]
 
@@ -103,7 +97,7 @@ ghost_objIDs = ghost['objID'].values[og_ghost_idx]
 # read in file of CosmoDC2 galaxies, with PZFlow SFR and redshifts, limited to abs r-band magnitude < -15
 # and -0.18 < i-z < 0.5
 if full:
-    cdc2 = pd.read_csv("/global/cscratch1/sd/agaglian/DC2full_pzRedshifts_twentyHealpix_sdss_updMag_Rkpc_Final.tar.gz", memory_map=True, low_memory=True)
+    cdc2 = pd.read_csv("/global/cscratch1/sd/mlokken/sn_hostenv/DC2full_pzRedshifts_31Healpix_sdss_updMag_Rkpc_Final.tar.gz", memory_map=True, low_memory=True)
 else:
     cdc2 = pd.read_csv("/global/cscratch1/sd/mlokken/sn_hostenv/DC2_pzRedshifts_SFR_RMag_lt_neg15.csv", memory_map=True, low_memory=True)
 
@@ -182,7 +176,8 @@ print("Successfully added all items")
 
 t.build(10) # 10 trees
 
-t.save('/global/cscratch1/sd/agaglian/build_cdc2_euclidean_z3_20healpix_updMag.ann')
+# t.save('/global/cscratch1/sd/agaglian/build_cdc2_euclidean_z3_20healpix_updMag.ann')
+t.save('/global/cscratch1/sd/mlokken/sn_hostenv/build_cdc2_euclidean_z3_31healpix_updMag.ann')
 
 end = time.time()
 

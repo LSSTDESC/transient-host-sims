@@ -28,17 +28,12 @@ else:
     tot = 5000
 
 start = time.time()
-#modes = np.array(['SN Ia', 'SN II', 'SLSN-I', 'SN IIP', 'SN IIb', 'SN IIn', 'SN Ib', 'SN Ic', 'SN Ibc'])
-#modes = np.array(['SN Ia', 'SN II', 'SN Ibc'])
-modes = np.array(['rand'])
+modes = np.array(['SN Ia', 'SN II', 'SN Ibc'])
 
-#neigh_dict = {'SN Ia':407, 'SN II':1040, 'SN Ibc':8902}
-#neigh_dict = {'SN Ia':815, 'SN II':2081, 'SN Ibc':17804}
-#neigh_dict = {'SN Ia':678, 'SN II':3147, 'SN Ibc':9508}
-#neigh_dict = {'SN Ia':678, 'SN II':3147, 'SN Ibc':9508}
-neigh_dict = {'rand':0}
-#neigh_dict = {'SN Ia':1356, 'SN II':6295, 'SN Ibc':19017}
-#neigh_dict = {'SN Ia':381, 'SN II':1282, 'SLSN-I':103448, 'SN IIP':10791, 'SN IIb':34482, 'SN IIn':12448, 'SN Ib':21582, 'SN Ic':14354, 'SN Ibc':7957}
+#modes = np.array(['rand'])
+
+#neigh_dict = {'rand':0}
+neigh_dict = {'SN Ia':2211, 'SN II':6984, 'SN Ibc':39473}
 
 if full:
     cosmo = GCRCatalogs.load_catalog("cosmoDC2_v1.1.4")
@@ -57,13 +52,12 @@ for mode in modes:
         modestr = mode
 
 #add the ghost matched catalog
-#    cdc2_matched_nn = pd.read_csv("/global/cscratch1/sd/agaglian/matchedSamples_1218/cdc2_matched_ghost_%s_z3_unq_zwgt_5pct_k%i.tar.gz" % (modestr, n_neigh), memory_map=True, low_memory=True)
-    cdc2_matched_nn = pd.read_csv("/global/cscratch1/sd/agaglian/matchedSamples_1218/rand_hostlib_SFRMsol.tar.gz", memory_map=True, low_memory=True)
+    cdc2_matched_nn = pd.read_csv("/global/cscratch1/sd/agaglian/matchedSamples_0407/cdc2_matched_ghost_%s_z3_unq_zwgt_5pct_k%i.tar.gz" % (modestr, n_neigh), memory_map=True, low_memory=True)
 
     print("Loaded the GHOST-DC2 matched catalog")
 
     galaxy_ids = cdc2_matched_nn['galaxy_id']
-    features = np.array(['galaxy_id', 'bulge_to_total_ratio_i'])
+    features = np.array(['galaxy_id', 'stellar_mass', 'totalStarFormationRate'])
 
     filters=[(lambda x: np.isin(x, galaxy_ids), 'galaxy_id')]
     cdc2_true = {}
@@ -84,8 +78,8 @@ for mode in modes:
     cdc2_true = pd.DataFrame(cdc2_true)
     cdc2_nbrs = pd.merge(cdc2_matched_nn, cdc2_true, on=['galaxy_id'], how='left')
 
-    #cdc2_nbrs.to_csv('/global/cscratch1/sd/agaglian/matchedSamples_1218/cdc2_matched_ghost_%s_z3_unq_zwgt_5pct_k%i_SFRMsol.tar.gz' % (modestr, n_neigh), index=False) 
-    cdc2_nbrs.to_csv('/global/cscratch1/sd/agaglian/matchedSamples_1218/rand_hostlib_SFRMsol_bulge.tar.gz', index=False)
+    cdc2_nbrs.to_csv('/global/cscratch1/sd/agaglian/matchedSamples_0407/cdc2_matched_ghost_%s_z3_unq_zwgt_5pct_k%i_SFRMsol.tar.gz' % (modestr, n_neigh), index=False) 
+    #cdc2_nbrs.to_csv('/global/cscratch1/sd/agaglian/matchedSamples_1218/rand_hostlib_SFRMsol_bulge.tar.gz', index=False)
 
 
     print("Saved file for %s."%mode)
