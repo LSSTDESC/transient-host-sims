@@ -13,47 +13,12 @@ def remove_prefix(text, prefix):
     return text[text.startswith(prefix) and len(prefix):]
 
 
-#plotting functionality!!
-sns.set_context("talk",font_scale=1.5)
-
-sns.set_style('white', {'axes.linewidth': 0.5})
-plt.rcParams['xtick.major.size'] = 15
-plt.rcParams['ytick.major.size'] = 15
-
-plt.rcParams['xtick.minor.size'] = 10
-plt.rcParams['ytick.minor.size'] = 10
-plt.rcParams['xtick.minor.width'] = 2
-plt.rcParams['ytick.minor.width'] = 2
-
-plt.rcParams['xtick.major.width'] = 2
-plt.rcParams['ytick.major.width'] = 2
-plt.rcParams['xtick.bottom'] = True
-plt.rcParams['xtick.top'] = True
-plt.rcParams['ytick.left'] = True
-plt.rcParams['ytick.right'] = True
-
-plt.rcParams['xtick.minor.visible'] = True
-plt.rcParams['ytick.minor.visible'] = True
-plt.rcParams['xtick.direction'] = 'in'
-plt.rcParams['ytick.direction'] = 'in'
-
-plt.rcParams.update({
-    "text.usetex": False,
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Helvetica"]})
-## for Palatino and other serif fonts use:
-plt.rcParams.update({
-    "text.usetex": False,
-    "font.family": "serif",
-    "font.serif": ["Palatino"],
-})
-
-
 GID = np.arange(1, 5000001)
 GID = ["G%07i" %x for x in GID]
 #randomly shuffle
 random.shuffle(GID)
-
+GID_df = pd.DataFrame({'GID':GID})
+GID_df.to_csv("/global/cscratch1/sd/mlokken/sn_hostenv/SCOTCH_GIDs.tar.gz",index=False)
 
 bands = 'ugrizY'
 NBAND = len(bands)
@@ -61,13 +26,13 @@ NBAND = len(bands)
 master_host_dict = {}  
 master_photometry_dict = {}  
     
-transDir = "/global/cscratch1/sd/kessler/SNANA_LSST_SIM/SCOTCH_CATALOG/MODELS/"
+transDir = "/global/cscratch1/sd/kessler/SNANA_LSST_SIM/SCOTCH_Z3/"
 prefix = "MLAG_GP_SCOTCH_FINAL"
 
 # get all models
 models = [x.split("/")[-1] for x in glob.glob(transDir + "*")]
 models = [remove_prefix(x, prefix + "_") for x in models]
-
+print(models)
 cadence_dict = {}
 
 for model in models:
@@ -122,12 +87,15 @@ for tempGID in GID:
     dc2_map[tempGID] = []
 
 # make the HDF5 file
-f    = h5py.File("/global/cscratch1/sd/mlokken/sn_hostenv/scotchtestfile.hdf5", "a")
+f    = h5py.File("/global/cscratch1/sd/mlokken/sn_hostenv/scotch10k_z3_fixID.hdf5", "a")
 transients = f.require_group("TransientTable")
 hosts      = f.require_group("HostTable")
 
-
-for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
+# for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
+for cl in {'SNII':['SNII-Templates', 'SNII+HostXT_V19', 'SNII-NMF', 'SNIIn+HostXT_V19', 'SNIIn-MOSFIT']}: # loop over classes / groupings in the hdf5 file
+    print(hosts.keys())
+    if cl in hosts.keys():
+        continue
     print("Starting on class %s"%cl)
 
     for i in np.arange(len(bands)):
@@ -150,7 +118,9 @@ for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
     master_host_dict['logMstar'] = []
     master_host_dict['logSFR'] = []
     master_host_dict['T'] = []
-    master_host_dict['ellipticity'] = []
+    master_host_dict['e'] = []
+    master_host_dict['e0'] = []
+    master_host_dict['e1'] = []
     master_host_dict['a0'] = []
     master_host_dict['b0'] = []
     master_host_dict['n0'] = []
@@ -162,7 +132,6 @@ for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
     master_host_dict['dc2ID'] = []
     master_host_dict['TID'] = []
     master_host_dict['a_rot'] = []
-    master_host_dict['TID'] = []
     master_host_dict['model']  = []
     master_host_dict['z']  = []
 
@@ -192,9 +161,8 @@ for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
 
         print("Starting on model %s"%model)
     
-    
         # for i in np.arange(len(headfiles)): # loop over files in model directory
-        for i in np.arange(1): # test mode: only do 1 file
+        for i in np.arange(2): # test mode: only do 2 files
             tempHead_fn = headfiles[i]
             tempPhot_fn = photfiles[i]
 
@@ -227,7 +195,7 @@ for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
                 TID = "T%.7i"%TID_counter
 
                 master_host_dict['dc2ID'].append(dc2ID)
-                master_host_dict['GID'].append(GID[TID_counter-1]) 
+                master_host_dict['GID'].append(repGID) 
                 master_host_dict['logMstar'].append(tempHead['SIM_HOSTLIB(LOGMASS_TRUE)'].values[k]) 
                 master_host_dict['logSFR'].append(tempHead['SIM_HOSTLIB(LOG_SFR)'].values[k]) 
                 master_host_dict['T'].append(tempHead['SIM_HOSTLIB(SQRADIUS)'].values[k]) 
@@ -238,30 +206,34 @@ for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
                 master_host_dict['a1'].append(tempHead['SIM_HOSTLIB(a1_Sersic)'].values[k]) 
                 master_host_dict['b1'].append(tempHead['SIM_HOSTLIB(b1_Sersic)'].values[k]) 
                 master_host_dict['n1'].append(tempHead['SIM_HOSTLIB(n1_Sersic)'].values[k]) 
-                master_host_dict['w1'].append(tempHead['SIM_HOSTLIB(w1_Sersic)'].values[k]) 
-                master_host_dict['ellipticity'].append(tempHead['SIM_HOSTLIB(ELLIPTICITY)'].values[k]) 
+                master_host_dict['w1'].append(tempHead['SIM_HOSTLIB(w1_Sersic)'].values[k])
                 master_host_dict['a_rot'].append(tempHead['SIM_HOSTLIB(a_rot)'].values[k]) 
                 master_host_dict['TID'].append(TID) 
-                # master_host_dict['class'].append(repClass)
-                # master_host_dict['model'].append(model) # no reason to include transient model since it has nothing to do with the host population
                 master_host_dict['z'].append(z)
-                
                 master_photometry_dict['TID'].append(TID)
-                # master_photometry_dict['class'].append(repClass)
                 master_photometry_dict['cadence'].append(cadence_dict[model])
                 master_photometry_dict['model'].append(model)
                 master_photometry_dict['GID'].append(repGID)
                 master_photometry_dict['z'].append(z)
                 master_photometry_dict['ra_off'].append(repRAoff)
                 master_photometry_dict['dec_off'].append(repDECoff)
-
                 master_photometry_dict['MJD'].append(np.unique([oneLC['MJD'].values]))
 
                 #calculate separation 
                 c2 = SkyCoord(tempHead['HOSTGAL_RA'].values[k]*u.deg, tempHead['HOSTGAL_DEC'].values[k]*u.deg, frame='icrs')
                 sep = c1.separation(c2)
                 master_photometry_dict['sep'].append(sep.arcsec)
-
+                #calculate corrected ellipticity
+                q_disk  = tempHead['SIM_HOSTLIB(b0_Sersic)'].values[k]/tempHead['SIM_HOSTLIB(a0_Sersic)'].values[k]
+                q_bulge = tempHead['SIM_HOSTLIB(b1_Sersic)'].values[k]/tempHead['SIM_HOSTLIB(a1_Sersic)'].values[k]
+                e_disk  = (1-q_disk)/(1+q_disk)
+                e_bulge = (1-q_bulge)/(1+q_bulge)
+                w_disk  = tempHead['SIM_HOSTLIB(w0_Sersic)'].values[k]
+                w_bulge = tempHead['SIM_HOSTLIB(w1_Sersic)'].values[k]
+                e_tot   = w_disk*e_disk + w_bulge*e_bulge # weights add to 1 so no normalization required
+                master_host_dict['e'].append(e_tot) 
+                master_host_dict['e0'].append(e_disk)
+                master_host_dict['e1'].append(e_bulge)
                 oneLC['BAND'] = [str(x).strip()[2] for x in oneLC['BAND']]
 
                 for j in np.arange(len(bands)): # loop over bands for one transient
@@ -270,38 +242,41 @@ for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
                     master_host_dict['mag_%s'%bands[j]].append(tempHead['HOSTGAL_MAG_%s'%bands[j]].values[k])
                     master_host_dict['magerr_%s'%bands[j]].append(tempHead['HOSTGAL_MAGERR_%s'%bands[j]].values[k])
                 TID_counter += 1
-            # create a new sub-group for this model, within the class group
-            TID_sorted = np.argsort(master_photometry_dict['TID'])
-            mod = tranclas.require_group("%s"%model)
-            for key in ['TID','z', 'MJD', 'mag_u', 'mag_g', 'mag_r', 'mag_i', 'mag_z', 'mag_Y',
-            'cadence','GID', 'ra_off', 'dec_off', 'sep']:
-                print("Attempting to create dataset %s"%key)
-                if key not in mod.keys():
-                    if type(master_photometry_dict[key][0]) is str: # only true for GID and TID
-                        print(key, "is string")
-                        attr = np.asarray(master_photometry_dict[key], dtype='S7')
-                    elif key in ['MJD', 'mag_u', 'mag_g', 'mag_r', 'mag_i', 'mag_z', 'mag_Y']:
-                        dtype = master_photometry_dict[key][0][0].dtype
-                        # these keys contain lists-of-arrays. arrays are equal sized however, so can be dtype 'float'
-                        attr = np.asarray(master_photometry_dict[key], dtype=dtype)
-                    else:
-                        attr = np.asarray(master_photometry_dict[key]) # allow auto-dtyping
-                    print(attr[0], attr.dtype, attr.shape)
-                    mod.create_dataset(key, data=attr)
-#     #order them correctly 
-#     master_hostDF = pd.DataFrame(master_host_dict)[['GID', 'dc2ID','mag_u', 'magerr_u', 'mag_g', 'magerr_g', 'mag_r', 'magerr_r',
-#        'mag_i', 'magerr_i', 'mag_z', 'magerr_z', 'mag_Y', 'magerr_Y',
-#         'logMsol', 'logSFR', 'T', 'ellipticity', 'a0', 'b0', 'n0',
-#        'w0', 'a1', 'b1', 'w1', 'n1', 'a_rot','TID']]
+                for l in master_photometry_dict['mag_u']:
+                    if len(l)!= 101:
+                        print("no")
+                        print(tempPhot_fn)
+        # create a new sub-group for this model, within the class group
+        TID_sorted = np.argsort(master_photometry_dict['TID'])
+        print("Photometry dict TID shape after single model: ",len(master_photometry_dict['TID']))
+        print("Uniqueness of phot TIDs for this class:", len(np.unique(master_photometry_dict['TID'])))
+        mod = tranclas.require_group("%s"%model)
 
-#     master_photDF = pd.DataFrame(master_photometry_dict)[['TID','z', 'MJD', 'mag_u', 'mag_g', 'mag_r', 'mag_i', 'mag_z', 'mag_Y',
-#        'class', 'model', 'cadence','GID', 'ra_off', 'dec_off', 'sep']]
+        for key in ['TID','z', 'MJD', 'mag_u', 'mag_g', 'mag_r', 'mag_i', 'mag_z', 'mag_Y',
+        'cadence','GID', 'ra_off', 'dec_off', 'sep']:
+            print("Attempting to create dataset %s"%key)
+            if key not in mod.keys():
+                if type(master_photometry_dict[key][0]) is str: # only true for GID and TID
+                    print(key, "is string")
+                    attr = np.asarray(master_photometry_dict[key], dtype='S7')
+                elif key in ['MJD', 'mag_u', 'mag_g', 'mag_r', 'mag_i', 'mag_z', 'mag_Y']:
+                    dtype = master_photometry_dict[key][0][0].dtype
+                    # these keys contain lists-of-arrays. arrays are equal sized however, so can be dtype 'float'
+                    attr = np.asarray(master_photometry_dict[key], dtype=dtype)
+                else:
+                    attr = np.asarray(master_photometry_dict[key]) # allow auto-dtyping
+                mod.create_dataset(key, data=attr[TID_sorted])
 
     GID_sorted = np.argsort(master_host_dict['GID'])
+    print("Host dict TID shape after looping through models: ", len(master_host_dict['TID']))
+    print("Uniqueness of host TIDs for this class:", len(np.unique(master_host_dict['TID'])))
+    print("Host dict GID shape after looping through models: ", len(master_host_dict['GID']))
+    print("Uniqueness of host GIDs for this class:", len(np.unique(master_host_dict['GID'])))
+
     for key in ['GID', 'dc2ID', 'z', 'mag_u', 'magerr_u', 'mag_g', 'magerr_g', 'mag_r', 'magerr_r',
            'mag_i', 'magerr_i', 'mag_z', 'magerr_z', 'mag_Y', 'magerr_Y',
-            'logMstar', 'logSFR', 'T', 'ellipticity', 'a0', 'b0', 'n0',
-           'w0', 'a1', 'b1', 'w1', 'n1', 'a_rot','TID']:
+            'logMstar', 'logSFR', 'T', 'a0', 'b0', 'n0', 'e0',
+           'w0', 'a1', 'b1', 'n1', 'w1', 'e1', 'e', 'a_rot','TID']:
         if key not in hostclas.keys():
             if type(master_host_dict[key][0]) is str: # only true for GID and TID
                 print(key, "is string")
@@ -310,14 +285,5 @@ for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
             else:
                 attr = np.asarray(master_host_dict[key]) # allow auto-dtyping
                 hostclas.create_dataset(key, data=attr[GID_sorted])
-        
-    # master_hostDF.sort_values(by='GID', inplace=True)
-    # master_photDF.sort_values(by='TID', inplace=True)
 
-    # master_photDF.to_csv("/global/cscratch1/sd/agaglian/SCOTCH_TransientTable_%s.tar.gz"%models[r],index=False)
-    # master_hostDF.to_csv("/global/cscratch1/sd/agaglian/SCOTCH_HostTable_%s.tar.gz"%models[r],index=False)
-
-
-# print(master_hostDF.head())
-# print(master_photDF.head())
 f.close()
