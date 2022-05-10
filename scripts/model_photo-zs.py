@@ -12,8 +12,8 @@ import time
 import seaborn as sns
 
 sharpnesses =[1]
-spl_binses = [8]#, 16, 32, 64]
-n_eps = [30]#[100]
+spl_binses = [8]#[16, 32, 64, 128]
+n_eps = [100]
 params = [(sh, sp, n) for sh in sharpnesses for sp in spl_binses for n in n_eps]
 print(len(params))
 # sys.exit(0)
@@ -21,8 +21,6 @@ idx = int(os.getenv('SLURM_ARRAY_TASK_ID', '0'))
 sharpness, spl_bins, n_ep = params[idx]
 
 print(params[idx])
-
-start = time.process_time()
 
 # def f(logmass):
 #     return 2*logmass - 24
@@ -40,23 +38,31 @@ def split_dataframe(df, chunk_size = 10000):
 cosmo=GCRCatalogs.load_catalog("cosmoDC2_v1.1.4_small")
 get_cols = ['redshift', 'mag_true_u_lsst', 'mag_true_g_lsst', 'mag_true_r_lsst', 'mag_true_i_lsst', 'mag_true_z_lsst', 'mag_true_y_lsst']
 # , 'stellar_mass', 'totalStarFormationRate']
+### TODO: extract error columns as well
 
 print("Reading CosmoDC2 small catalog")
 data = cosmo.get_quantities(get_cols)
 print("Catalog read.")
 df = pd.DataFrame(data)
 
-quantities = ['redshift', 'u', 'g', 'r', 'i', 'z', 'y']
+quantities = ['redshift', 'u', 'g', 'r', 'i', 'z', 'y']#, 'u_err', 'g_err', 'r_err', 'i_err', 'z_err', 'y_err']
 data = df.rename(columns={'mag_true_y_lsst': 'y', 
                    'mag_true_r_lsst': 'r', 
                    'mag_true_u_lsst': 'u', 
                    'mag_true_g_lsst': 'g', 
                    'mag_true_z_lsst': 'z', 
-                   'mag_true_i_lsst': 'i'})[quantities]
+                   'mag_true_i_lsst': 'i',})[quantities]
+                           # 'Y_obs_err':'y_err', 
+                           # 'r_obs_err':'r_err', 
+                           # 'u_obs_err':'u_err', 
+                           # 'g_obs_err':'g_err', 
+                           # 'z_obs_err':'z_err', 
+                           # 'i_obs_err':'i_err'})[quantities]
 z_col = 0
 # data['logSFRtot'] = onp.log10(data['totalStarFormationRate'])
 # data['logmass']   = onp.log10(data['stellar_mass'])
 # data.drop(columns=['totalStarFormationRate', 'stellar_mass'], inplace=True)
+### TODO: make error columns as [colname]_err
 
 conditional_columns = data.columns.drop(['redshift'])
 print("Original conditional columns:", conditional_columns)
@@ -113,9 +119,10 @@ print('Training on {} CosmoDC2 galaxies.'.format(len(data_subset)))
 
 # mins = np.array([0])
 # maxs = np.array([data_subset['redshift'].max()+0.1])
-latent = Uniform((-5, 5))
+# latent = Uniform((-5, 5))
 # latent = Tdist(input_dim=1)
-# latent = Joint(Uniform((0., 3.), (-1., 5.), (-1., 5.), (-1., 5.), (-1., 5.), (-1., 5.), (15, 35)))
+# latent = Uniform((0., 3.), (-1., 5.), (-1., 5.), (-1., 5.), (-1., 5.), (-1., 5.), (15, 35))
+latent = Uniform((-5, 5), (-5, 5), (-5, 5), (-5, 5), (-5, 5), (-5, 5), (-5, 5))
 
 ### TODO: vary these between runs
 ### iterate over sharpness = 1, 3, 10, 30
@@ -129,7 +136,7 @@ bijector = Chain(
     # InvSoftplus(z_col, sharpness),
     # StandardScaler(means, stds),
     ShiftBounds(mins, maxs, B=5),
-    RollingSplineCoupling(nlayers=7, K=spl_bins),#1, n_conditions=6, K=spl_bins),
+    RollingSplineCoupling(nlayers=7, K=spl_bins),#1, n_conditions=6),
 )
 
 # To create the conditional flow, we have to provide
@@ -149,18 +156,26 @@ flow = Flow(
 ### iterate over n_ep = 30, 100, 300, 1000
 # n_ep = 100#30
 
+start = time.perf_counter()
+print(start)
+
+### TODO: retrain with errors
 losses = flow.train(data_subset, epochs=n_ep, verbose=True)
+# losses = flow.train(data_subset, convolve_errs=True, epochs=n_ep, verbose=True)
 
 sns.set_context("talk")
 plt.plot(losses)
 plt.xlabel("Epoch")
 plt.ylabel("Training loss")
 plt.savefig("../plots/model_photo-zs_uniform_splbin%d_epoch%d_traning_loss.png" % (spl_bins, n_ep))
-
 plt.clf()
+
 # save the results, then apply them with the script apply_pzflow_dc2full.py
 flow.save('../data_files/model_photo-zs_uniform_splbin%d_epoch%d_flow.pkl' % (spl_bins, n_ep))
-print("time taken for uniform latent %d spline bins %d epochs training: "%(spl_bins, n_ep)+str(time.process_time() - start))
+
+end = time.perf_counter()
+print(end)
+print("time taken for uniform latent %d spline bins %d epochs training: "%(spl_bins, n_ep)+str(end - start))
 
 # allSamples = []
 # #split into 100 chunks
