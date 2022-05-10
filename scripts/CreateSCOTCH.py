@@ -18,7 +18,8 @@ GID = ["G%07i" %x for x in GID]
 #randomly shuffle
 random.shuffle(GID)
 GID_df = pd.DataFrame({'GID':GID})
-GID_df.to_csv("/global/cscratch1/sd/mlokken/sn_hostenv/SCOTCH_GIDs.tar.gz",index=False)
+#GID_df.to_csv("/global/cscratch1/sd/mlokken/sn_hostenv/SCOTCH_GIDs.tar.gz",index=False)
+GID_df.to_csv("/global/cscratch1/sd/agaglian/SCOTCH_GIDs.tar.gz",index=False)
 
 bands = 'ugrizY'
 NBAND = len(bands)
@@ -87,9 +88,16 @@ for tempGID in GID:
     dc2_map[tempGID] = []
 
 # make the HDF5 file
-f    = h5py.File("/global/cscratch1/sd/mlokken/sn_hostenv/scotch10k_z3_fixID.hdf5", "a")
+#f    = h5py.File("/global/cscratch1/sd/mlokken/sn_hostenv/scotch10k_z3_fixID.hdf5", "a")
+f     = h5py.File("/global/cscratch1/sd/agaglian/scotch10k_z3_fixID.hdf5", "a")
 transients = f.require_group("TransientTable")
 hosts      = f.require_group("HostTable")
+
+bands_byte = [b'u ', b'g ', b'r ', b'i ', b'z ', b'Y ']
+dummy_df = pd.DataFrame({'MJD':np.zeros(6), 'BAND':[b'u ', b'g ', 
+                                                    b'r ', b'i ',
+                                                    b'z ', b'Y '], 'FLUXCAL':[-999.]*6,
+                         'FLUXCALERR':[-999.]*6, 'SIM_MAGOBS':[99.0]*6})
 
 # for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
 for cl in {'SNII':['SNII-Templates', 'SNII+HostXT_V19', 'SNII-NMF', 'SNIIn+HostXT_V19', 'SNIIn-MOSFIT']}: # loop over classes / groupings in the hdf5 file
@@ -169,6 +177,31 @@ for cl in {'SNII':['SNII-Templates', 'SNII+HostXT_V19', 'SNII-NMF', 'SNIIn+HostX
             tempPhot = table.Table.read(tempPhot_fn, format='fits').to_pandas()
             tempHead = table.Table.read(tempHead_fn, format='fits').to_pandas()
 
+            #add in dummy rows for each band missing
+            offset = 0
+            first_idx = 0
+            tempPhot_mod_list = []
+            for idx, row in tempPhot.iterrows():
+                if idx%100000 == 0:
+                    print("Done verifying photometry for %i rows" % idx)
+                if row['BAND'] == b'- ':
+                    offset+=1
+                elif row['BAND'] != bands_byte[(idx-offset)%len(bands_byte)]:
+                    tempPhot_mod_list.append(tempPhot.loc[first_idx:idx-1])
+                    replaceDF = dummy_df.loc[[((idx-offset)%len(bands_byte))]]
+                    replaceDF['MJD'] = tempPhot.loc[tempPhot.index == (idx), 'MJD'].values[0]
+                    tempPhot_mod_list.append(replaceDF)
+                    first_idx = idx
+            tempPhot = pd.concat(tempPhot_mod_list, ignore_index=True)
+            
+            check = True
+            for j in np.arange(len(bands_byte)):
+                if j==0:
+                    bandLen = len(tempPhot[tempPhot == bands_byte[j]])
+                else:
+                    check *= bandLen == len(tempPhot[tempPhot == bands_byte[j]])
+            if check: 
+                print("Verified that all photometry arrays are the same length!")
             tempPhot.replace(-999, np.nan, inplace=True)
             tempHead.replace(-999, np.nan, inplace=True)
 
