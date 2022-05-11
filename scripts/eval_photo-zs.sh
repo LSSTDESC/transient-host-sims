@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --constraint=haswell
 #SBATCH --nodes=1
-#SBATCH --qos=shared
 #SBATCH --ntasks=5
 #SBATCH --cpus-per-task=1
 #SBATCH --array=0-4

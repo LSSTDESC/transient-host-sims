@@ -18,16 +18,17 @@ from rail.evaluation import Evaluator
 
 start = time.process_time()
 
-hl_heads = {'SNIa_GHOST': 18,
-            'SNII_GHOST': 18, 
-            'SNIbc_GHOST_PHOTOZ': 18, 
-            'UNMATCHED_KN_SHIFT_GHOST': 18,
-            'UNMATCHED_COSMODC2_GHOST': 17}
+hl_heads = {'SNIa': 18,
+            'SNII': 18, 
+            'SNIbc': 18, 
+            'UNMATCHED_KN_SHIFT': 18,
+            'UNMATCHED_COSMODC2': 17}
 
 idx = int(os.getenv('SLURM_ARRAY_TASK_ID', '0'))
 
 which_hl = list(hl_heads.keys())[idx]
-hl_path = '/global/cfs/cdirs/lsst/groups/TD/SN/SNANA/SURVEYS/LSST/ROOT/PLASTICC_DEV/HOSTLIB/'+which_hl+'.HOSTLIB'
+print(which_hl)
+hl_path = '/global/cfs/cdirs/lsst/groups/TD/SN/SNANA/SURVEYS/LSST/ROOT/PLASTICC_DEV/HOSTLIB/'+which_hl+'_GHOST.HOSTLIB.gz'
 df = pd.read_csv(hl_path, skiprows=hl_heads[which_hl], delimiter=' ', header=0)
 
 nhost = len(df)
@@ -70,7 +71,7 @@ q50_ind = np.argwhere(quants == 0.5)
 # output - a list of DataFrame
 # purpose - splits the DataFrame into smaller chunks
 
-def split_dataframe(df, chunk_size = 10000): 
+def split_dataframe(df, chunk_size = 1000): 
     chunks = list()
     num_chunks = len(df) // chunk_size + 1
     for i in range(num_chunks):
