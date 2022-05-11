@@ -1,9 +1,10 @@
 #!/bin/bash
 #SBATCH --constraint=haswell
 #SBATCH --nodes=1
-#SBATCH --ntasks=5
+#SBATCH --qos=regular
+#SBATCH --ntasks=2
 #SBATCH --cpus-per-task=1
-#SBATCH --array=0-4
+#SBATCH --array=1,4
 #SBATCH --time=03:00:00
 #SBATCH --output=R-%x.%j.out
 #SBATCH --account=m1727

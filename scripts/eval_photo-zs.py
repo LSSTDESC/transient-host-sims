@@ -64,18 +64,22 @@ flow = Flow(file='../data_files/model_photo-zs_uniform_splbin64_epoch100_flow.pk
 flow.latent = Uniform((-5, 5), (-5, 5), (-5, 5), (-5, 5), (-5, 5), (-5, 5), (-5, 5))
 
 zgrid = np.logspace(-3., np.log10(3.), 300)
-quants = np.linspace(0., 1., 11)[1:]#-1]
-q50_ind = np.argwhere(quants == 0.5)
+quants = np.linspace(0., 1., 11)
+quants[0] += 0.001
+quants[-1] -= 0.001
+print(quants)
+# q50_ind = np.argwhere(quants == 0.5)
 
 # input - df: a Dataframe, chunkSize: the chunk size
 # output - a list of DataFrame
 # purpose - splits the DataFrame into smaller chunks
 
-def split_dataframe(df, chunk_size = 1000): 
+def split_dataframe(df, chunk_size = 10000): 
     chunks = list()
     num_chunks = len(df) // chunk_size + 1
     for i in range(num_chunks):
         chunks.append(df[i*chunk_size:(i+1)*chunk_size])
+    print('anticipate '+str(len(chunks))+' files')
     return chunks
 
 hl_subsets = split_dataframe(hl_df)
@@ -88,14 +92,14 @@ for j in range(len(hl_subsets)):
     flow_z = flow.posterior(hl_subset[['u-g', 'g-r', 'r-i', 'i-z', 'z-y', 'r']], column='redshift', grid=zgrid)#, err_samples=err_samples)
 
     in_pdfs = qp.Ensemble(qp.interp, data=dict(xvals=zgrid, yvals=flow_z, check_input=True))
-    zquants = in_pdfs.ppf(quants)
-    zmeds = np.reshape(zquants[:, q50_ind], zquants.shape[0])
-    p50 = np.empty_like(zmeds)
-    for i in range(in_pdfs.npdf):
-        p50[i] = in_pdfs[i].pdf(zmeds[i])
+    # zquants = in_pdfs.ppf(quants)
+    # zmeds = np.reshape(zquants[:, q50_ind], zquants.shape[0])
+    # p50 = np.empty_like(zmeds)
+    # for i in range(in_pdfs.npdf):
+    #     p50[i] = in_pdfs[i].pdf(zmeds[i])
     out_pdfs = in_pdfs.convert_to(qp.quant_piecewise_gen, quants=quants, check_input=False)
 
-    out_pdfs.set_ancil(dict(GALID=df_subset['GALID'].values, p50=p50))
+    out_pdfs.set_ancil(dict(GALID=df_subset['GALID'].values))#, p50=p50))
     out_pdfs.write_to('/global/cfs/cdirs/lsst/groups/TD/SN/SNANA/SURVEYS/LSST/ROOT/PLASTICC_DEV/HOSTLIB/zquants/quants'+str(j)+which_hl+'.fits')
 
     
