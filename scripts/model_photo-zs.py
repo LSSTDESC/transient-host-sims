@@ -12,7 +12,7 @@ import time
 import seaborn as sns
 
 sharpnesses =[1]
-spl_binses = [8]#[16, 32, 64, 128]
+spl_binses = [64]#[16, 32, 64, 128]
 n_eps = [100]
 params = [(sh, sp, n) for sh in sharpnesses for sp in spl_binses for n in n_eps]
 print(len(params))
@@ -36,28 +36,31 @@ def split_dataframe(df, chunk_size = 10000):
     return chunks
 
 cosmo=GCRCatalogs.load_catalog("cosmoDC2_v1.1.4_small")
-get_cols = ['redshift', 'mag_true_u_lsst', 'mag_true_g_lsst', 'mag_true_r_lsst', 'mag_true_i_lsst', 'mag_true_z_lsst', 'mag_true_y_lsst']
+get_cols = ['redshift', 'mag_u_lsst', 'mag_g_lsst', 'mag_r_lsst', 'mag_i_lsst', 'mag_z_lsst', 'mag_Y_lsst']#, 
+            # 'magerr_u_lsst', 'magerr_g_lsst', 'magerr_r_lsst', 'magerr_i_lsst', 'magerr_z_lsst', 'magerr_Y_lsst']
 # , 'stellar_mass', 'totalStarFormationRate']
 ### TODO: extract error columns as well
+
+print(cosmo.list_all_quantities())
 
 print("Reading CosmoDC2 small catalog")
 data = cosmo.get_quantities(get_cols)
 print("Catalog read.")
 df = pd.DataFrame(data)
 
-quantities = ['redshift', 'u', 'g', 'r', 'i', 'z', 'y']#, 'u_err', 'g_err', 'r_err', 'i_err', 'z_err', 'y_err']
-data = df.rename(columns={'mag_true_y_lsst': 'y', 
-                   'mag_true_r_lsst': 'r', 
-                   'mag_true_u_lsst': 'u', 
-                   'mag_true_g_lsst': 'g', 
-                   'mag_true_z_lsst': 'z', 
-                   'mag_true_i_lsst': 'i',})[quantities]
-                           # 'Y_obs_err':'y_err', 
-                           # 'r_obs_err':'r_err', 
-                           # 'u_obs_err':'u_err', 
-                           # 'g_obs_err':'g_err', 
-                           # 'z_obs_err':'z_err', 
-                           # 'i_obs_err':'i_err'})[quantities]
+allcols = ['redshift', 'u', 'g', 'r', 'i', 'z', 'y']#, 'u_err', 'g_err', 'r_err', 'i_err', 'z_err', 'y_err']
+data = df.rename(columns={'mag_Y_lsst': 'y', 
+                   'mag_r_lsst': 'r', 
+                   'mag_u_lsst': 'u', 
+                   'mag_g_lsst': 'g', 
+                   'mag_z_lsst': 'z', 
+                   'mag_i_lsst': 'i',})[allcols]
+                   # 'magerr_Y_lsst': 'y_err', 
+                   # 'magerr_r_lsst': 'r_err', 
+                   # 'magerr_u_lsst': 'u_err', 
+                   # 'magerr_g_lsst': 'g_err', 
+                   # 'magerr_z_lsst': 'z_err', 
+                   # 'magerr_i_lsst': 'i_err',})[allcols]
 z_col = 0
 # data['logSFRtot'] = onp.log10(data['totalStarFormationRate'])
 # data['logmass']   = onp.log10(data['stellar_mass'])
@@ -79,8 +82,10 @@ print("Original conditional columns:", conditional_columns)
 
 ### TODO: create colors and one magnitude and save scaling factors
 data_scaled = data.copy()
+quantities = allcols#[:-6]
 for i in range(len(quantities)-2):
     data_scaled[quantities[i+1]+'-'+quantities[i+2]] = data[quantities[i+1]] - data[quantities[i+2]]
+    # data_scaled[quantities[i+1]+'-'+quantities[i+2]+'_err'] = np.sqrt(data[quantities[6+i+1]]**2 + data[quantities[6+i+2]]**2)
 data_scaled = data_scaled.drop(columns=conditional_columns)
 print(data_scaled.columns)
 
@@ -160,22 +165,22 @@ start = time.perf_counter()
 print(start)
 
 ### TODO: retrain with errors
-losses = flow.train(data_subset, epochs=n_ep, verbose=True)
-# losses = flow.train(data_subset, convolve_errs=True, epochs=n_ep, verbose=True)
+# losses = flow.train(data_subset, epochs=n_ep, verbose=True)
+losses = flow.train(data_subset, convolve_errs=True, epochs=n_ep, verbose=True)
 
 sns.set_context("talk")
 plt.plot(losses)
 plt.xlabel("Epoch")
 plt.ylabel("Training loss")
-plt.savefig("../plots/model_photo-zs_uniform_splbin%d_epoch%d_traning_loss.png" % (spl_bins, n_ep))
+plt.savefig("../plots/model_photo-zs_errs_splbin%d_epoch%d_traning_loss.png" % (spl_bins, n_ep))
 plt.clf()
 
 # save the results, then apply them with the script apply_pzflow_dc2full.py
-flow.save('../data_files/model_photo-zs_uniform_splbin%d_epoch%d_flow.pkl' % (spl_bins, n_ep))
+flow.save('../data_files/model_photo-zs_errs_splbin%d_epoch%d_flow.pkl' % (spl_bins, n_ep))
 
 end = time.perf_counter()
 print(end)
-print("time taken for uniform latent %d spline bins %d epochs training: "%(spl_bins, n_ep)+str(end - start))
+print("time taken for %d spline bins %d epochs with errors training: "%(spl_bins, n_ep)+str(end - start))
 
 # allSamples = []
 # #split into 100 chunks
