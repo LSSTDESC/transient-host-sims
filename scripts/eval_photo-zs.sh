@@ -2,10 +2,11 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --time=00:30:00
+#SBATCH --mem-per-cpu=128GB
 #SBATCH --constraint=haswell
 #SBATCH --qos=debug
 #SBATCH --output=R-%x.%j.out
-#SBATCH --array=12
+#SBATCH --array=13
 #SBATCH --account=m1727
 
 

@@ -79,7 +79,7 @@ flow = Flow(file='../data_files/model_photo-zs_uniform_splbin64_epoch100_flow.pk
 # this path will not change any time soon
 flow.latent = Uniform((-5, 5), (-5, 5), (-5, 5), (-5, 5), (-5, 5), (-5, 5), (-5, 5))
 
-zgrid = np.logspace(-3., np.log10(3.), 300)
+zgrid = np.logspace(-3., np.log10(3.), 100)
 quants = np.linspace(0., 1., 11)
 # print(quants)
 q50_ind = np.argwhere(quants == 0.5)
@@ -129,7 +129,7 @@ q50_ind = np.argwhere(quants == 0.5)
 #     out_pdfs.set_ancil(dict(GALID=df_subset['GALID'].values, p50=p50, iqr=iqr))
 #     out_pdfs.write_to('/global/cfs/cdirs/lsst/groups/TD/SN/SNANA/SURVEYS/LSST/ROOT/PLASTICC_DEV/HOSTLIB/zquants/'+which_hl+'test'+str(j)+'errs.fits')
     
-batch_size = 10000#2**idx
+batch_size = 2**idx
 flow_z = flow.posterior(hl_df,#[['u-g', 'g-r', 'r-i', 'i-z', 'z-y', 'r']], 
                             column='redshift', grid=zgrid, err_samples=10, batch_size=batch_size)
 etime = time.process_time() - start
@@ -141,6 +141,6 @@ out_pdfs = in_pdfs.convert_to(qp.quant_piecewise_gen, quants=quants, check_input
 ctime = time.process_time() - start
 print(which_hl+' compressed in '+str(ctime))
 out_pdfs.set_ancil(dict(GALID=df['GALID'].values[:nhost], p50=p50, iqr=iqr))
-out_pdfs.write_to('/global/cfs/cdirs/lsst/groups/TD/SN/SNANA/SURVEYS/LSST/ROOT/PLASTICC_DEV/HOSTLIB/zquants/test'+which_hl+'batched'+str(batch_size)+'.fits')
+out_pdfs.write_to('/global/cfs/cdirs/lsst/groups/TD/SN/SNANA/SURVEYS/LSST/ROOT/PLASTICC_DEV/HOSTLIB/zquants/test'+which_hl+'batched'+str(batch_size)+'lowres.fits')
     
 print('finished '+str(nhost)+' of '+which_hl+' in '+str(time.process_time() - start))
