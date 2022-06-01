@@ -18,8 +18,8 @@ GID = ["G%07i" %x for x in GID]
 #randomly shuffle
 random.shuffle(GID)
 GID_df = pd.DataFrame({'GID':GID})
-#GID_df.to_csv("/global/cscratch1/sd/mlokken/sn_hostenv/SCOTCH_GIDs.tar.gz",index=False)
-GID_df.to_csv("/global/cscratch1/sd/agaglian/SCOTCH_GIDs.tar.gz",index=False)
+GID_df.to_csv("/global/cscratch1/sd/mlokken/sn_hostenv/SCOTCH_GIDs.tar.gz",index=False)
+# GID_df.to_csv("/global/cscratch1/sd/agaglian/SCOTCH_GIDs.tar.gz",index=False)
 
 bands = 'ugrizY'
 NBAND = len(bands)
@@ -33,7 +33,6 @@ prefix = "MLAG_GP_SCOTCH_FINAL"
 # get all models
 models = [x.split("/")[-1] for x in glob.glob(transDir + "*")]
 models = [remove_prefix(x, prefix + "_") for x in models]
-print(models)
 cadence_dict = {}
 
 for model in models:
@@ -62,34 +61,28 @@ for model in models:
 #         classes[i] = 'AGN'
 # unq_classes = np.unique(classes)
 
-# do this mapping manually to get it specifically how we want
-class_model_dict = {'AGN':['AGN01', 'AGN20'],
-'KN':['KN_K17', 'KN_B19'],
-'SLSN-I':['SLSN-I'],
+#do this mapping manually to get it specifically how we want
+
+class_model_dict = {
+'SNIa':['SNIa-SALT2', 'SNIa-91bg', 'SNIax'],
+'SNIc':['SNIc+HostXT_V19', 'SNIc-Templates', 'SNIcBL+HostXT_V19'],
 'SNII':['SNII-Templates', 'SNII+HostXT_V19', 'SNII-NMF', 'SNIIn+HostXT_V19', 'SNIIn-MOSFIT'],
 'SNIIb':['SNIIb+HostXT_V19'],
-'SNIa':['SNIa-SALT2', 'SNIa-91bg', 'SNIax'],
 'SNIb':['SNIb-Templates', 'SNIb+HostXT_V19'],
-'SNIc':['SNIc+HostXT_V19', 'SNIc-Templates', 'SNIcBL+HostXT_V19'],
-'TDE':['TDE']}
-
+'TDE':['TDE'],
+'AGN':['AGN01', 'AGN20'],
+'KN':['KN_K17', 'KN_B19'],
+'SLSN-I':['SLSN-I']
+}
 
 TID_counter = 1
-GID_counter = 1
 
 #fiducial skycoord at 0,0
 c1 = SkyCoord(0.0*u.deg, 0.0*u.deg, frame='icrs')
 
-#dictionary between our calculated GIDs and dc2 galaxy_id
-dc2_map = {}
-
-#initialize the mapping between GID and cosmoDC2 ID
-for tempGID in GID:
-    dc2_map[tempGID] = []
-
 # make the HDF5 file
-#f    = h5py.File("/global/cscratch1/sd/mlokken/sn_hostenv/scotch10k_z3_fixID.hdf5", "a")
-f     = h5py.File("/global/cscratch1/sd/agaglian/scotch10k_z3_fixID.hdf5", "a")
+f    = h5py.File("/global/cscratch1/sd/mlokken/sn_hostenv/scotch10k_z3.hdf5", "a")
+# f     = h5py.File("/global/cscratch1/sd/agaglian/scotch10k_z3_fixuband.hdf5", "a")
 transients = f.require_group("TransientTable")
 hosts      = f.require_group("HostTable")
 
@@ -99,8 +92,7 @@ dummy_df = pd.DataFrame({'MJD':np.zeros(6), 'BAND':[b'u ', b'g ',
                                                     b'z ', b'Y '], 'FLUXCAL':[-999.]*6,
                          'FLUXCALERR':[-999.]*6, 'SIM_MAGOBS':[99.0]*6})
 
-# for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
-for cl in {'SNII':['SNII-Templates', 'SNII+HostXT_V19', 'SNII-NMF', 'SNIIn+HostXT_V19', 'SNIIn-MOSFIT']}: # loop over classes / groupings in the hdf5 file
+for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
     print(hosts.keys())
     if cl in hosts.keys():
         continue
@@ -112,20 +104,8 @@ for cl in {'SNII':['SNII-Templates', 'SNII+HostXT_V19', 'SNII-NMF', 'SNIIn+HostX
     
 
     master_host_dict['GID'] = []
-    #master_host_dict['ZPHOT'] = []
-    #master_host_dict['ZPHOT_QP0'] = []
-    #master_host_dict['ZPHOT_QP1'] = []
-    #master_host_dict['ZPHOT_QP2'] = []
-    #master_host_dict['ZPHOT_QP3'] = []
-    #master_host_dict['ZPHOT_QP4'] = []
-    #master_host_dict['ZPHOT_QP5'] = []
-    #master_host_dict['ZPHOT_QP6'] = []
-    #master_host_dict['ZPHOT_QP7'] = []
-    #master_host_dict['ZPHOT_QP8'] = []
-    #master_host_dict['ZPHOT_QP9'] = []
     master_host_dict['logMstar'] = []
     master_host_dict['logSFR'] = []
-    master_host_dict['T'] = []
     master_host_dict['e'] = []
     master_host_dict['e0'] = []
     master_host_dict['e1'] = []
@@ -147,6 +127,9 @@ for cl in {'SNII':['SNII-Templates', 'SNII+HostXT_V19', 'SNII-NMF', 'SNIIn+HostX
     tranclas = transients.require_group("%s"%cl)
     hostclas = hosts.require_group("%s"%cl)
     for model in models:
+        if model in hosts[cl].keys():
+            continue
+        print("Starting on model %s"%model)
         # set / reset the datasets
         master_photometry_dict['TID'] = []
         master_photometry_dict['MJD'] = []
@@ -167,41 +150,15 @@ for cl in {'SNII':['SNII-Templates', 'SNII+HostXT_V19', 'SNII-NMF', 'SNIIn+HostX
         headfiles = sorted(glob.glob(fn + "*HEAD.FITS.gz"))
         photfiles = sorted(glob.glob(fn + "*PHOT.FITS.gz"))
 
-        print("Starting on model %s"%model)
     
-        # for i in np.arange(len(headfiles)): # loop over files in model directory
-        for i in np.arange(2): # test mode: only do 2 files
+        for i in np.arange(len(headfiles)): # loop over files in model directory
+        # for i in np.arange(2): # test mode: only do 2 files
             tempHead_fn = headfiles[i]
             tempPhot_fn = photfiles[i]
 
             tempPhot = table.Table.read(tempPhot_fn, format='fits').to_pandas()
             tempHead = table.Table.read(tempHead_fn, format='fits').to_pandas()
 
-            #add in dummy rows for each band missing
-            offset = 0
-            first_idx = 0
-            tempPhot_mod_list = []
-            for idx, row in tempPhot.iterrows():
-                if idx%100000 == 0:
-                    print("Done verifying photometry for %i rows" % idx)
-                if row['BAND'] == b'- ':
-                    offset+=1
-                elif row['BAND'] != bands_byte[(idx-offset)%len(bands_byte)]:
-                    tempPhot_mod_list.append(tempPhot.loc[first_idx:idx-1])
-                    replaceDF = dummy_df.loc[[((idx-offset)%len(bands_byte))]]
-                    replaceDF['MJD'] = tempPhot.loc[tempPhot.index == (idx), 'MJD'].values[0]
-                    tempPhot_mod_list.append(replaceDF)
-                    first_idx = idx
-            tempPhot = pd.concat(tempPhot_mod_list, ignore_index=True)
-            
-            check = True
-            for j in np.arange(len(bands_byte)):
-                if j==0:
-                    bandLen = len(tempPhot[tempPhot == bands_byte[j]])
-                else:
-                    check *= bandLen == len(tempPhot[tempPhot == bands_byte[j]])
-            if check: 
-                print("Verified that all photometry arrays are the same length!")
             tempPhot.replace(-999, np.nan, inplace=True)
             tempHead.replace(-999, np.nan, inplace=True)
 
@@ -217,7 +174,6 @@ for cl in {'SNII':['SNII-Templates', 'SNII+HostXT_V19', 'SNII-NMF', 'SNIIn+HostX
 
                 z = tempHead['SIM_REDSHIFT_CMB'].values[k]
                 repGID = GID[TID_counter-1]
-                #repTID = TID  
 
                 #flipping ra and dec to get the offset of the transient from the galaxy, not the offset of the galaxy from the transient
                 #...it is this easy, right?
@@ -226,12 +182,10 @@ for cl in {'SNII':['SNII-Templates', 'SNII+HostXT_V19', 'SNII-NMF', 'SNIIn+HostX
 
                 #append to master dict
                 TID = "T%.7i"%TID_counter
-
                 master_host_dict['dc2ID'].append(dc2ID)
                 master_host_dict['GID'].append(repGID) 
                 master_host_dict['logMstar'].append(tempHead['SIM_HOSTLIB(LOGMASS_TRUE)'].values[k]) 
-                master_host_dict['logSFR'].append(tempHead['SIM_HOSTLIB(LOG_SFR)'].values[k]) 
-                master_host_dict['T'].append(tempHead['SIM_HOSTLIB(SQRADIUS)'].values[k]) 
+                master_host_dict['logSFR'].append(tempHead['SIM_HOSTLIB(LOG_SFR)'].values[k])
                 master_host_dict['a0'].append(tempHead['SIM_HOSTLIB(a0_Sersic)'].values[k]) 
                 master_host_dict['b0'].append(tempHead['SIM_HOSTLIB(b0_Sersic)'].values[k]) 
                 master_host_dict['n0'].append(tempHead['SIM_HOSTLIB(n0_Sersic)'].values[k]) 
@@ -251,7 +205,6 @@ for cl in {'SNII':['SNII-Templates', 'SNII+HostXT_V19', 'SNII-NMF', 'SNIIn+HostX
                 master_photometry_dict['ra_off'].append(repRAoff)
                 master_photometry_dict['dec_off'].append(repDECoff)
                 master_photometry_dict['MJD'].append(np.unique([oneLC['MJD'].values]))
-
                 #calculate separation 
                 c2 = SkyCoord(tempHead['HOSTGAL_RA'].values[k]*u.deg, tempHead['HOSTGAL_DEC'].values[k]*u.deg, frame='icrs')
                 sep = c1.separation(c2)
@@ -275,14 +228,9 @@ for cl in {'SNII':['SNII-Templates', 'SNII+HostXT_V19', 'SNII-NMF', 'SNIIn+HostX
                     master_host_dict['mag_%s'%bands[j]].append(tempHead['HOSTGAL_MAG_%s'%bands[j]].values[k])
                     master_host_dict['magerr_%s'%bands[j]].append(tempHead['HOSTGAL_MAGERR_%s'%bands[j]].values[k])
                 TID_counter += 1
-                for l in master_photometry_dict['mag_u']:
-                    if len(l)!= 101:
-                        print("no")
-                        print(tempPhot_fn)
+                
         # create a new sub-group for this model, within the class group
         TID_sorted = np.argsort(master_photometry_dict['TID'])
-        print("Photometry dict TID shape after single model: ",len(master_photometry_dict['TID']))
-        print("Uniqueness of phot TIDs for this class:", len(np.unique(master_photometry_dict['TID'])))
         mod = tranclas.require_group("%s"%model)
 
         for key in ['TID','z', 'MJD', 'mag_u', 'mag_g', 'mag_r', 'mag_i', 'mag_z', 'mag_Y',
@@ -290,8 +238,8 @@ for cl in {'SNII':['SNII-Templates', 'SNII+HostXT_V19', 'SNII-NMF', 'SNIIn+HostX
             print("Attempting to create dataset %s"%key)
             if key not in mod.keys():
                 if type(master_photometry_dict[key][0]) is str: # only true for GID and TID
-                    print(key, "is string")
-                    attr = np.asarray(master_photometry_dict[key], dtype='S7')
+                    # print(key, "is string")
+                    attr = np.asarray(master_photometry_dict[key], dtype='S8')
                 elif key in ['MJD', 'mag_u', 'mag_g', 'mag_r', 'mag_i', 'mag_z', 'mag_Y']:
                     dtype = master_photometry_dict[key][0][0].dtype
                     # these keys contain lists-of-arrays. arrays are equal sized however, so can be dtype 'float'
@@ -301,22 +249,59 @@ for cl in {'SNII':['SNII-Templates', 'SNII+HostXT_V19', 'SNII-NMF', 'SNIIn+HostX
                 mod.create_dataset(key, data=attr[TID_sorted])
 
     GID_sorted = np.argsort(master_host_dict['GID'])
-    print("Host dict TID shape after looping through models: ", len(master_host_dict['TID']))
-    print("Uniqueness of host TIDs for this class:", len(np.unique(master_host_dict['TID'])))
-    print("Host dict GID shape after looping through models: ", len(master_host_dict['GID']))
-    print("Uniqueness of host GIDs for this class:", len(np.unique(master_host_dict['GID'])))
 
     for key in ['GID', 'dc2ID', 'z', 'mag_u', 'magerr_u', 'mag_g', 'magerr_g', 'mag_r', 'magerr_r',
            'mag_i', 'magerr_i', 'mag_z', 'magerr_z', 'mag_Y', 'magerr_Y',
-            'logMstar', 'logSFR', 'T', 'a0', 'b0', 'n0', 'e0',
+            'logMstar', 'logSFR', 'a0', 'b0', 'n0', 'e0',
            'w0', 'a1', 'b1', 'n1', 'w1', 'e1', 'e', 'a_rot','TID']:
         if key not in hostclas.keys():
             if type(master_host_dict[key][0]) is str: # only true for GID and TID
                 print(key, "is string")
-                attr = np.asarray(master_host_dict[key], dtype='S7')
-                hostclas.create_dataset(key, data=attr[GID_sorted], dtype='S7')
+                attr = np.asarray(master_host_dict[key], dtype='S8')
+                hostclas.create_dataset(key, data=attr[GID_sorted], dtype='S8')
             else:
                 attr = np.asarray(master_host_dict[key]) # allow auto-dtyping
                 hostclas.create_dataset(key, data=attr[GID_sorted])
 
 f.close()
+
+
+# obsolete code for adding in dummy rows for missing bands
+
+            # #add in dummy rows for each band missing
+            # offset = 0
+            # first_idx = 0
+            # tempPhot_mod_list = []
+            # for idx, row in tempPhot.iterrows():
+            #     if idx%100000 == 0:
+            #         print("Done verifying photometry for %i rows" % idx)
+            #     if row['BAND'] == b'- ':
+            #         offset+=1
+            #     elif row['BAND'] != bands_byte[(idx-offset)%len(bands_byte)]:
+            #         tempPhot_mod_list.append(tempPhot.loc[first_idx:idx-1])
+            #         replaceDF = dummy_df.loc[[((idx-offset)%len(bands_byte))]]
+            #         replaceDF['MJD'] = tempPhot.loc[tempPhot.index == (idx), 'MJD'].values[0]
+            #         tempPhot_mod_list.append(replaceDF)
+            #         first_idx = idx
+            # tempPhot = pd.concat(tempPhot_mod_list, ignore_index=True)
+            
+#             check = True
+#             for j in np.arange(len(bands_byte)):
+#                 if j==0:
+#                     bandLen = len(tempPhot[tempPhot == bands_byte[j]])
+#                 else:
+#                     check *= bandLen == len(tempPhot[tempPhot == bands_byte[j]])
+#             if check: 
+#                 print("Verified that all photometry arrays are the same length!")
+
+    #master_host_dict['ZPHOT'] = []
+    #master_host_dict['ZPHOT_QP0'] = []
+    #master_host_dict['ZPHOT_QP1'] = []
+    #master_host_dict['ZPHOT_QP2'] = []
+    #master_host_dict['ZPHOT_QP3'] = []
+    #master_host_dict['ZPHOT_QP4'] = []
+    #master_host_dict['ZPHOT_QP5'] = []
+    #master_host_dict['ZPHOT_QP6'] = []
+    #master_host_dict['ZPHOT_QP7'] = []
+    #master_host_dict['ZPHOT_QP8'] = []
+    #master_host_dict['ZPHOT_QP9'] = []
