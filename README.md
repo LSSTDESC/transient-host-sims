@@ -1,5 +1,7 @@
 # Transient-Host Galaxy Simulations
-This repository contains the code used to genenerate the Synthetic Catalog of Optical Transients and Correlated Hosts (SCOTCH). Our pipeline uses the code SNANA (Kessler+2009) for simulating transients, and is described in detail in Lokken and Gagliano, 2022 (currently in DESC internal review). The methodology for constructing our hostlibs for SNe Ia, SNe II, and SNe Ib/c (requires access to cosmoDC2 through GCRCatalogs) is outlined as follows:
+This repository contains the code used to genenerate the Synthetic Catalog of Optical Transients and Correlated Hosts (SCOTCH). The catalogue and associated data files can be downloaded from our Zenodo repository: https://zenodo.org/record/6601211#.Ypjl2pDMLhO.
+
+Our pipeline uses the code SNANA (Kessler+2009) for simulating transients, and is described in detail in Lokken and Gagliano, 2022 (in review). The methodology for constructing our hostlibs for SNe Ia, SNe II, and SNe Ib/c (requires access to cosmoDC2 through GCRCatalogs) is outlined as follows:
 
 1. Use a normalizing flow (pzflow) to smooth out cosmoDC2 catalog redshifts by running scripts/apply_pzflow_dc2full.py.
 2. Create the index of cosmoDC2 galaxies, and normalize GHOST + cosmoDC2 catalogues, by running scripts/buildANN.py.
