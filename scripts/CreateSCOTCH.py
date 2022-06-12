@@ -13,47 +13,13 @@ def remove_prefix(text, prefix):
     return text[text.startswith(prefix) and len(prefix):]
 
 
-#plotting functionality!!
-sns.set_context("talk",font_scale=1.5)
-
-sns.set_style('white', {'axes.linewidth': 0.5})
-plt.rcParams['xtick.major.size'] = 15
-plt.rcParams['ytick.major.size'] = 15
-
-plt.rcParams['xtick.minor.size'] = 10
-plt.rcParams['ytick.minor.size'] = 10
-plt.rcParams['xtick.minor.width'] = 2
-plt.rcParams['ytick.minor.width'] = 2
-
-plt.rcParams['xtick.major.width'] = 2
-plt.rcParams['ytick.major.width'] = 2
-plt.rcParams['xtick.bottom'] = True
-plt.rcParams['xtick.top'] = True
-plt.rcParams['ytick.left'] = True
-plt.rcParams['ytick.right'] = True
-
-plt.rcParams['xtick.minor.visible'] = True
-plt.rcParams['ytick.minor.visible'] = True
-plt.rcParams['xtick.direction'] = 'in'
-plt.rcParams['ytick.direction'] = 'in'
-
-plt.rcParams.update({
-    "text.usetex": False,
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Helvetica"]})
-## for Palatino and other serif fonts use:
-plt.rcParams.update({
-    "text.usetex": False,
-    "font.family": "serif",
-    "font.serif": ["Palatino"],
-})
-
-
 GID = np.arange(1, 5000001)
 GID = ["G%07i" %x for x in GID]
 #randomly shuffle
 random.shuffle(GID)
-
+GID_df = pd.DataFrame({'GID':GID})
+GID_df.to_csv("/global/cscratch1/sd/mlokken/sn_hostenv/SCOTCH_GIDs.tar.gz",index=False)
+# GID_df.to_csv("/global/cscratch1/sd/agaglian/SCOTCH_GIDs.tar.gz",index=False)
 
 bands = 'ugrizY'
 NBAND = len(bands)
@@ -61,13 +27,12 @@ NBAND = len(bands)
 master_host_dict = {}  
 master_photometry_dict = {}  
     
-transDir = "/global/cscratch1/sd/kessler/SNANA_LSST_SIM/SCOTCH_CATALOG/MODELS/"
+transDir = "/global/cscratch1/sd/kessler/SNANA_LSST_SIM/SCOTCH_Z3/"
 prefix = "MLAG_GP_SCOTCH_FINAL"
 
 # get all models
 models = [x.split("/")[-1] for x in glob.glob(transDir + "*")]
 models = [remove_prefix(x, prefix + "_") for x in models]
-
 cadence_dict = {}
 
 for model in models:
@@ -96,38 +61,41 @@ for model in models:
 #         classes[i] = 'AGN'
 # unq_classes = np.unique(classes)
 
-# do this mapping manually to get it specifically how we want
-class_model_dict = {'AGN':['AGN01', 'AGN20'],
-'KN':['KN_K17', 'KN_B19'],
-'SLSN-I':['SLSN-I'],
+#do this mapping manually to get it specifically how we want
+
+class_model_dict = {
+'SNIa':['SNIa-SALT2', 'SNIa-91bg', 'SNIax'],
+'SNIc':['SNIc+HostXT_V19', 'SNIc-Templates', 'SNIcBL+HostXT_V19'],
 'SNII':['SNII-Templates', 'SNII+HostXT_V19', 'SNII-NMF', 'SNIIn+HostXT_V19', 'SNIIn-MOSFIT'],
 'SNIIb':['SNIIb+HostXT_V19'],
-'SNIa':['SNIa-SALT2', 'SNIa-91bg', 'SNIax'],
 'SNIb':['SNIb-Templates', 'SNIb+HostXT_V19'],
-'SNIc':['SNIc+HostXT_V19', 'SNIc-Templates', 'SNIcBL+HostXT_V19'],
-'TDE':['TDE']}
-
+'TDE':['TDE'],
+'AGN':['AGN01', 'AGN20'],
+'KN':['KN_K17', 'KN_B19'],
+'SLSN-I':['SLSN-I']
+}
 
 TID_counter = 1
-GID_counter = 1
 
 #fiducial skycoord at 0,0
 c1 = SkyCoord(0.0*u.deg, 0.0*u.deg, frame='icrs')
 
-#dictionary between our calculated GIDs and dc2 galaxy_id
-dc2_map = {}
-
-#initialize the mapping between GID and cosmoDC2 ID
-for tempGID in GID:
-    dc2_map[tempGID] = []
-
 # make the HDF5 file
-f    = h5py.File("/global/cscratch1/sd/mlokken/sn_hostenv/scotchtestfile.hdf5", "a")
+f    = h5py.File("/global/cscratch1/sd/mlokken/sn_hostenv/scotch10k_z3.hdf5", "a")
+# f     = h5py.File("/global/cscratch1/sd/agaglian/scotch10k_z3_fixuband.hdf5", "a")
 transients = f.require_group("TransientTable")
 hosts      = f.require_group("HostTable")
 
+bands_byte = [b'u ', b'g ', b'r ', b'i ', b'z ', b'Y ']
+dummy_df = pd.DataFrame({'MJD':np.zeros(6), 'BAND':[b'u ', b'g ', 
+                                                    b'r ', b'i ',
+                                                    b'z ', b'Y '], 'FLUXCAL':[-999.]*6,
+                         'FLUXCALERR':[-999.]*6, 'SIM_MAGOBS':[99.0]*6})
 
 for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
+    print(hosts.keys())
+    if cl in hosts.keys():
+        continue
     print("Starting on class %s"%cl)
 
     for i in np.arange(len(bands)):
@@ -136,21 +104,11 @@ for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
     
 
     master_host_dict['GID'] = []
-    #master_host_dict['ZPHOT'] = []
-    #master_host_dict['ZPHOT_QP0'] = []
-    #master_host_dict['ZPHOT_QP1'] = []
-    #master_host_dict['ZPHOT_QP2'] = []
-    #master_host_dict['ZPHOT_QP3'] = []
-    #master_host_dict['ZPHOT_QP4'] = []
-    #master_host_dict['ZPHOT_QP5'] = []
-    #master_host_dict['ZPHOT_QP6'] = []
-    #master_host_dict['ZPHOT_QP7'] = []
-    #master_host_dict['ZPHOT_QP8'] = []
-    #master_host_dict['ZPHOT_QP9'] = []
     master_host_dict['logMstar'] = []
     master_host_dict['logSFR'] = []
-    master_host_dict['T'] = []
-    master_host_dict['ellipticity'] = []
+    master_host_dict['e'] = []
+    master_host_dict['e0'] = []
+    master_host_dict['e1'] = []
     master_host_dict['a0'] = []
     master_host_dict['b0'] = []
     master_host_dict['n0'] = []
@@ -162,7 +120,6 @@ for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
     master_host_dict['dc2ID'] = []
     master_host_dict['TID'] = []
     master_host_dict['a_rot'] = []
-    master_host_dict['TID'] = []
     master_host_dict['model']  = []
     master_host_dict['z']  = []
 
@@ -170,6 +127,9 @@ for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
     tranclas = transients.require_group("%s"%cl)
     hostclas = hosts.require_group("%s"%cl)
     for model in models:
+        if model in hosts[cl].keys():
+            continue
+        print("Starting on model %s"%model)
         # set / reset the datasets
         master_photometry_dict['TID'] = []
         master_photometry_dict['MJD'] = []
@@ -190,11 +150,9 @@ for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
         headfiles = sorted(glob.glob(fn + "*HEAD.FITS.gz"))
         photfiles = sorted(glob.glob(fn + "*PHOT.FITS.gz"))
 
-        print("Starting on model %s"%model)
     
-    
-        # for i in np.arange(len(headfiles)): # loop over files in model directory
-        for i in np.arange(1): # test mode: only do 1 file
+        for i in np.arange(len(headfiles)): # loop over files in model directory
+        # for i in np.arange(2): # test mode: only do 2 files
             tempHead_fn = headfiles[i]
             tempPhot_fn = photfiles[i]
 
@@ -216,7 +174,6 @@ for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
 
                 z = tempHead['SIM_REDSHIFT_CMB'].values[k]
                 repGID = GID[TID_counter-1]
-                #repTID = TID  
 
                 #flipping ra and dec to get the offset of the transient from the galaxy, not the offset of the galaxy from the transient
                 #...it is this easy, right?
@@ -225,12 +182,10 @@ for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
 
                 #append to master dict
                 TID = "T%.7i"%TID_counter
-
                 master_host_dict['dc2ID'].append(dc2ID)
-                master_host_dict['GID'].append(GID[TID_counter-1]) 
+                master_host_dict['GID'].append(repGID) 
                 master_host_dict['logMstar'].append(tempHead['SIM_HOSTLIB(LOGMASS_TRUE)'].values[k]) 
-                master_host_dict['logSFR'].append(tempHead['SIM_HOSTLIB(LOG_SFR)'].values[k]) 
-                master_host_dict['T'].append(tempHead['SIM_HOSTLIB(SQRADIUS)'].values[k]) 
+                master_host_dict['logSFR'].append(tempHead['SIM_HOSTLIB(LOG_SFR)'].values[k])
                 master_host_dict['a0'].append(tempHead['SIM_HOSTLIB(a0_Sersic)'].values[k]) 
                 master_host_dict['b0'].append(tempHead['SIM_HOSTLIB(b0_Sersic)'].values[k]) 
                 master_host_dict['n0'].append(tempHead['SIM_HOSTLIB(n0_Sersic)'].values[k]) 
@@ -238,30 +193,33 @@ for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
                 master_host_dict['a1'].append(tempHead['SIM_HOSTLIB(a1_Sersic)'].values[k]) 
                 master_host_dict['b1'].append(tempHead['SIM_HOSTLIB(b1_Sersic)'].values[k]) 
                 master_host_dict['n1'].append(tempHead['SIM_HOSTLIB(n1_Sersic)'].values[k]) 
-                master_host_dict['w1'].append(tempHead['SIM_HOSTLIB(w1_Sersic)'].values[k]) 
-                master_host_dict['ellipticity'].append(tempHead['SIM_HOSTLIB(ELLIPTICITY)'].values[k]) 
+                master_host_dict['w1'].append(tempHead['SIM_HOSTLIB(w1_Sersic)'].values[k])
                 master_host_dict['a_rot'].append(tempHead['SIM_HOSTLIB(a_rot)'].values[k]) 
                 master_host_dict['TID'].append(TID) 
-                # master_host_dict['class'].append(repClass)
-                # master_host_dict['model'].append(model) # no reason to include transient model since it has nothing to do with the host population
                 master_host_dict['z'].append(z)
-                
                 master_photometry_dict['TID'].append(TID)
-                # master_photometry_dict['class'].append(repClass)
                 master_photometry_dict['cadence'].append(cadence_dict[model])
                 master_photometry_dict['model'].append(model)
                 master_photometry_dict['GID'].append(repGID)
                 master_photometry_dict['z'].append(z)
                 master_photometry_dict['ra_off'].append(repRAoff)
                 master_photometry_dict['dec_off'].append(repDECoff)
-
                 master_photometry_dict['MJD'].append(np.unique([oneLC['MJD'].values]))
-
                 #calculate separation 
                 c2 = SkyCoord(tempHead['HOSTGAL_RA'].values[k]*u.deg, tempHead['HOSTGAL_DEC'].values[k]*u.deg, frame='icrs')
                 sep = c1.separation(c2)
                 master_photometry_dict['sep'].append(sep.arcsec)
-
+                #calculate corrected ellipticity
+                q_disk  = tempHead['SIM_HOSTLIB(b0_Sersic)'].values[k]/tempHead['SIM_HOSTLIB(a0_Sersic)'].values[k]
+                q_bulge = tempHead['SIM_HOSTLIB(b1_Sersic)'].values[k]/tempHead['SIM_HOSTLIB(a1_Sersic)'].values[k]
+                e_disk  = (1-q_disk)/(1+q_disk)
+                e_bulge = (1-q_bulge)/(1+q_bulge)
+                w_disk  = tempHead['SIM_HOSTLIB(w0_Sersic)'].values[k]
+                w_bulge = tempHead['SIM_HOSTLIB(w1_Sersic)'].values[k]
+                e_tot   = w_disk*e_disk + w_bulge*e_bulge # weights add to 1 so no normalization required
+                master_host_dict['e'].append(e_tot) 
+                master_host_dict['e0'].append(e_disk)
+                master_host_dict['e1'].append(e_bulge)
                 oneLC['BAND'] = [str(x).strip()[2] for x in oneLC['BAND']]
 
                 for j in np.arange(len(bands)): # loop over bands for one transient
@@ -270,54 +228,80 @@ for cl in class_model_dict: # loop over classes / groupings in the hdf5 file
                     master_host_dict['mag_%s'%bands[j]].append(tempHead['HOSTGAL_MAG_%s'%bands[j]].values[k])
                     master_host_dict['magerr_%s'%bands[j]].append(tempHead['HOSTGAL_MAGERR_%s'%bands[j]].values[k])
                 TID_counter += 1
-            # create a new sub-group for this model, within the class group
-            TID_sorted = np.argsort(master_photometry_dict['TID'])
-            mod = tranclas.require_group("%s"%model)
-            for key in ['TID','z', 'MJD', 'mag_u', 'mag_g', 'mag_r', 'mag_i', 'mag_z', 'mag_Y',
-            'cadence','GID', 'ra_off', 'dec_off', 'sep']:
-                print("Attempting to create dataset %s"%key)
-                if key not in mod.keys():
-                    if type(master_photometry_dict[key][0]) is str: # only true for GID and TID
-                        print(key, "is string")
-                        attr = np.asarray(master_photometry_dict[key], dtype='S7')
-                    elif key in ['MJD', 'mag_u', 'mag_g', 'mag_r', 'mag_i', 'mag_z', 'mag_Y']:
-                        dtype = master_photometry_dict[key][0][0].dtype
-                        # these keys contain lists-of-arrays. arrays are equal sized however, so can be dtype 'float'
-                        attr = np.asarray(master_photometry_dict[key], dtype=dtype)
-                    else:
-                        attr = np.asarray(master_photometry_dict[key]) # allow auto-dtyping
-                    print(attr[0], attr.dtype, attr.shape)
-                    mod.create_dataset(key, data=attr)
-#     #order them correctly 
-#     master_hostDF = pd.DataFrame(master_host_dict)[['GID', 'dc2ID','mag_u', 'magerr_u', 'mag_g', 'magerr_g', 'mag_r', 'magerr_r',
-#        'mag_i', 'magerr_i', 'mag_z', 'magerr_z', 'mag_Y', 'magerr_Y',
-#         'logMsol', 'logSFR', 'T', 'ellipticity', 'a0', 'b0', 'n0',
-#        'w0', 'a1', 'b1', 'w1', 'n1', 'a_rot','TID']]
+                
+        # create a new sub-group for this model, within the class group
+        TID_sorted = np.argsort(master_photometry_dict['TID'])
+        mod = tranclas.require_group("%s"%model)
 
-#     master_photDF = pd.DataFrame(master_photometry_dict)[['TID','z', 'MJD', 'mag_u', 'mag_g', 'mag_r', 'mag_i', 'mag_z', 'mag_Y',
-#        'class', 'model', 'cadence','GID', 'ra_off', 'dec_off', 'sep']]
+        for key in ['TID','z', 'MJD', 'mag_u', 'mag_g', 'mag_r', 'mag_i', 'mag_z', 'mag_Y',
+        'cadence','GID', 'ra_off', 'dec_off', 'sep']:
+            print("Attempting to create dataset %s"%key)
+            if key not in mod.keys():
+                if type(master_photometry_dict[key][0]) is str: # only true for GID and TID
+                    # print(key, "is string")
+                    attr = np.asarray(master_photometry_dict[key], dtype='S8')
+                elif key in ['MJD', 'mag_u', 'mag_g', 'mag_r', 'mag_i', 'mag_z', 'mag_Y']:
+                    dtype = master_photometry_dict[key][0][0].dtype
+                    # these keys contain lists-of-arrays. arrays are equal sized however, so can be dtype 'float'
+                    attr = np.asarray(master_photometry_dict[key], dtype=dtype)
+                else:
+                    attr = np.asarray(master_photometry_dict[key]) # allow auto-dtyping
+                mod.create_dataset(key, data=attr[TID_sorted])
 
     GID_sorted = np.argsort(master_host_dict['GID'])
+
     for key in ['GID', 'dc2ID', 'z', 'mag_u', 'magerr_u', 'mag_g', 'magerr_g', 'mag_r', 'magerr_r',
            'mag_i', 'magerr_i', 'mag_z', 'magerr_z', 'mag_Y', 'magerr_Y',
-            'logMstar', 'logSFR', 'T', 'ellipticity', 'a0', 'b0', 'n0',
-           'w0', 'a1', 'b1', 'w1', 'n1', 'a_rot','TID']:
+            'logMstar', 'logSFR', 'a0', 'b0', 'n0', 'e0',
+           'w0', 'a1', 'b1', 'n1', 'w1', 'e1', 'e', 'a_rot','TID']:
         if key not in hostclas.keys():
             if type(master_host_dict[key][0]) is str: # only true for GID and TID
                 print(key, "is string")
-                attr = np.asarray(master_host_dict[key], dtype='S7')
-                hostclas.create_dataset(key, data=attr[GID_sorted], dtype='S7')
+                attr = np.asarray(master_host_dict[key], dtype='S8')
+                hostclas.create_dataset(key, data=attr[GID_sorted], dtype='S8')
             else:
                 attr = np.asarray(master_host_dict[key]) # allow auto-dtyping
                 hostclas.create_dataset(key, data=attr[GID_sorted])
-        
-    # master_hostDF.sort_values(by='GID', inplace=True)
-    # master_photDF.sort_values(by='TID', inplace=True)
 
-    # master_photDF.to_csv("/global/cscratch1/sd/agaglian/SCOTCH_TransientTable_%s.tar.gz"%models[r],index=False)
-    # master_hostDF.to_csv("/global/cscratch1/sd/agaglian/SCOTCH_HostTable_%s.tar.gz"%models[r],index=False)
-
-
-# print(master_hostDF.head())
-# print(master_photDF.head())
 f.close()
+
+
+# obsolete code for adding in dummy rows for missing bands
+
+            # #add in dummy rows for each band missing
+            # offset = 0
+            # first_idx = 0
+            # tempPhot_mod_list = []
+            # for idx, row in tempPhot.iterrows():
+            #     if idx%100000 == 0:
+            #         print("Done verifying photometry for %i rows" % idx)
+            #     if row['BAND'] == b'- ':
+            #         offset+=1
+            #     elif row['BAND'] != bands_byte[(idx-offset)%len(bands_byte)]:
+            #         tempPhot_mod_list.append(tempPhot.loc[first_idx:idx-1])
+            #         replaceDF = dummy_df.loc[[((idx-offset)%len(bands_byte))]]
+            #         replaceDF['MJD'] = tempPhot.loc[tempPhot.index == (idx), 'MJD'].values[0]
+            #         tempPhot_mod_list.append(replaceDF)
+            #         first_idx = idx
+            # tempPhot = pd.concat(tempPhot_mod_list, ignore_index=True)
+            
+#             check = True
+#             for j in np.arange(len(bands_byte)):
+#                 if j==0:
+#                     bandLen = len(tempPhot[tempPhot == bands_byte[j]])
+#                 else:
+#                     check *= bandLen == len(tempPhot[tempPhot == bands_byte[j]])
+#             if check: 
+#                 print("Verified that all photometry arrays are the same length!")
+
+    #master_host_dict['ZPHOT'] = []
+    #master_host_dict['ZPHOT_QP0'] = []
+    #master_host_dict['ZPHOT_QP1'] = []
+    #master_host_dict['ZPHOT_QP2'] = []
+    #master_host_dict['ZPHOT_QP3'] = []
+    #master_host_dict['ZPHOT_QP4'] = []
+    #master_host_dict['ZPHOT_QP5'] = []
+    #master_host_dict['ZPHOT_QP6'] = []
+    #master_host_dict['ZPHOT_QP7'] = []
+    #master_host_dict['ZPHOT_QP8'] = []
+    #master_host_dict['ZPHOT_QP9'] = []
