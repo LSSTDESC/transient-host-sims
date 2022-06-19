@@ -8,33 +8,55 @@ There is a 'HostTable' and a 'TransientTable'. One level below each table, the s
 
 ### Host Table
 
-m_{band}: Apparent AB magnitudes in LSST ugrizy bands
-$\sigma_{m,<\mathrm{band}>}$ & 10-year estimated apparent AB magnitude errors for LSST
-$e$ & Shear ellipticity $(1-q)/(1+q)$, where $q$ is the axis ratio\\
-$R_d$ & Disk half-light radius in physical kpc\\
-$R_s$ & Spheroid half-light radius in physical kpc\\
-$\log{(M_*)}$ & Log stellar mass $\left[M_{\odot}\right]$\\
-$\log{(SFR)}$ & Log star formation rate
-$\left[M_{\odot}/\textrm{yr}\right]$ \\
-$n_i$ & Sersic index for $i=[0,1]$; $n_0=1$ (exponential disk) and $n_1=4$ (deVaucouleurs bulge)  \\
-$w_i$ & Weight of $i=[0,1]$ Sersic components (bulge and disk) \\
-$a_i$ & Major-axis half-light size $\left[''\right]$ for $i=[0,1]$ Sersic components \\
-$b_i$ & Minor-axis half-light size $\left[''\right]$ for $i=[0,1]$ Sersic components \\
-$e_i$ & Ellipticity of $i=[0,1]$ Sersic components \\
-$e_{\rm tot}$ & Luminosity-weighted sum of bulge and disk ellipticities \\
-$a_{\mathrm{rot}}$ & Rotation angle of major axis with respect to the +RA coordinate [$^{\circ}$] \\ 
+$m_{<\mathrm{band}>}$: Apparent AB magnitudes in LSST $ugrizY$ bands
+
+$\sigma_{m,<\mathrm{band}>}$: 10-year estimated apparent AB magnitude errors for LSST
+
+$e$: Shear ellipticity $(1-q)/(1+q)$, where $q$ is the axis ratio
+
+$R_d$: Disk half-light radius in physical kpc
+
+$R_s$: Spheroid half-light radius in physical kpc
+
+$\log{(M_*)}$: Log stellar mass $\left[M_{\odot}\right]$
+
+$\log{(SFR)}$: Log star formation rate
+$\left[M_{\odot}/\textrm{yr}\right]$ 
+
+$n_i$: Sersic index for $i=[0,1]$; $n_0=1$ (exponential disk) and $n_1=4$ (deVaucouleurs bulge) 
+
+$w_i$: Weight of $i=[0,1]$ Sersic components (bulge and disk) 
+
+$a_i$: Major-axis half-light size $\left[''\right]$ for $i=[0,1]$ Sersic components 
+
+$b_i$: Minor-axis half-light size $\left[''\right]$ for $i=[0,1]$ Sersic components 
+
+$e_i$: Ellipticity of $i=[0,1]$ Sersic components 
+
+$e_{\rm tot}$: Luminosity-weighted sum of bulge and disk ellipticities 
+
+$a_{\mathrm{rot}}$: Rotation angle of major axis with respect to the +RA coordinate [$^{\circ}$] 
 
         
 ### Transient Table
-\texttt{TID} & Transient ID\\
-$z$ & True Redshift (of host and transient) \\
-\texttt{GID} & Host-galaxy ID  \\
-MJD & Array of Modified Julian Dates of light curve observations (only spacing is meaningful) \\
-$m_{<\mathrm{band}>}$ & Apparent brightness in LSST $ugrizY$ bands (AB magnitudes) \\
-Class & Transient class\\
-Model & Simulation model from Table \ref{tbl:class-models-numbers} \\
-Cadence & Time-spacing of light curve samples [days] \\
+\texttt{TID}: Transient ID
 
-$\rm RA_{\rm off}$ & Transient offset from host nucleus in R.A. [$''$]\\
-$\rm \delta{\rm off}$ & Transient offset from host nucleus in Dec. [$''$]\\
-Sep & Total great-circle distance between transient and host nucleus [$''$]\\ 
+$z$: True Redshift (of host and transient) 
+
+\texttt{GID}: Host-galaxy ID  
+
+MJD: Array of Modified Julian Dates of light curve observations (only spacing is meaningful)
+
+$m_{<\mathrm{band}>}$: Apparent brightness in LSST $ugrizY$ bands (AB magnitudes) 
+
+Class: Transient class
+
+Model: Simulation model
+
+Cadence: Time-spacing of light curve samples [days] 
+
+$\rm RA_{\rm off}$: Transient offset from host nucleus in R.A. [$''$]
+
+$\rm \delta{\rm off}$: Transient offset from host nucleus in Dec. [$''$]
+
+Sep: Total great-circle distance between transient and host nucleus [$''$]
