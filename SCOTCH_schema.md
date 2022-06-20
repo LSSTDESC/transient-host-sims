@@ -39,11 +39,11 @@ $a_{\mathrm{rot}}$: Rotation angle of major axis with respect to the +RA coordin
 
         
 ### Transient Table
-\texttt{TID}: Transient ID
+TID: Transient ID
 
 $z$: True Redshift (of host and transient) 
 
-\texttt{GID}: Host-galaxy ID  
+GID: Host-galaxy ID  
 
 MJD: Array of Modified Julian Dates of light curve observations (only spacing is meaningful)
 
