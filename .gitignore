@@ -1,3 +1,4 @@
+*.pkl
 *.png
 *.out
 scripts/.ipynb_checkpoints/*
