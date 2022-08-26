@@ -3,6 +3,8 @@ import math
 import numpy as np
 import os
 import pandas as pd
+import random
+random.seed = 42
 import subprocess
 import sys
 import time
@@ -14,35 +16,37 @@ from pzflow.distributions import Uniform, Joint, Normal
 
 import qp
 
-glob_path = '/global/cfs/cdirs/lsst/groups/TD/SN/SNANA/SURVEYS/LSST/ROOT/PLASTICC_DEV/HOSTLIB/zquants/'
-
-print(datetime.datetime.now())
+print('started at '+str(datetime.datetime.now()))
 sys.stdout.flush()
 
 start = time.process_time()
+
+glob_path = '/global/cfs/cdirs/lsst/groups/TD/SN/SNANA/SURVEYS/LSST/ROOT/PLASTICC_DEV/HOSTLIB/zquants/1yr/'
+
 # SNII_GHOST.HOSTLIB.gz: 2449022
 # SNIa_GHOST.HOSTLIB.gz: 2141291
 # SNIbc_GHOST.HOSTLIB.gz: 3354171
 # UNMATCHED_COSMODC2_GHOST.HOSTLIB.gz: 1907393
 # UNMATCHED_KN_SHIFT_GHOST.HOSTLIB.gz: 1907394
 
-hl_heads = {'SNIa': (10, 2141270), # 2.75 hours
-            'SNII': (19, 2449001), # 3.25 hours
-            'SNIbc_Pt1': (19, 1224500), # 4.25 hours
-            'SNIbc_Pt2': (19, 1224500),##3354171), # 4.25 hours
-            'UNMATCHED_KN_SHIFT': (19, 1907372), #2.5 hours
-            'UNMATCHED_COSMODC2': (18, 1907373)} # 2.5 hours
+hl_heads = {'SNIa': (0, 2141270), # 2.75 hours
+            'SNII': (0, 2449001), # 3.25 hours
+            'SNIbc': (0, 3354150), # 6 hours
+            # 'SNIbc_Pt2': (19, 1224500), # 4.25 hours
+            'UNMATCHED_KN_SHIFT': (0, 1907378), #2.5 hours
+            'UNMATCHED_COSMODC2': (0, 1907379)} # 2.5 hours
 
 
 idx = int(os.getenv('SLURM_ARRAY_TASK_ID', '0'))
-chunks = 64#int(os.getenv('SLURM_ARRAY_TASK_COUNT', '32'))#sys.argv[2]
+chunks = int(sys.argv[2])#64#int(os.getenv('SLURM_ARRAY_TASK_COUNT', '32'))#sys.argv[2]
 
 # idx from job array, one core with 128GB memory
 batch_size = 50#100#don't change me! (determines memory needed)
 
 which_hl = sys.argv[1]
-hl_path = '/global/cfs/cdirs/lsst/groups/TD/SN/SNANA/SURVEYS/LSST/ROOT/PLASTICC_DEV/HOSTLIB/magerr/'+which_hl+'_GHOST.HOSTLIB.gz'
-hl_head = int(subprocess.check_output(f"zcat {hl_path} | cat -n | sed -n '/VARNAMES/ {{ p; q }}'  | awk '{{print $1-1}}'", shell=True))
+hl_path = '/global/cfs/cdirs/lsst/groups/TD/SN/SNANA/SURVEYS/LSST/ROOT/PLASTICC_DEV/HOSTLIB/magerr/unzip/'+which_hl+'_GHOST.HOSTLIB_RESTOREDMAG1YR'
+         #'/global/cfs/cdirs/lsst/groups/TD/SN/SNANA/SURVEYS/LSST/ROOT/PLASTICC_DEV/HOSTLIB/magerr/'+which_hl+'_GHOST.HOSTLIB.gz'
+hl_head = 0#int(subprocess.check_output(f"zcat {hl_path} | cat -n | sed -n '/VARNAMES/ {{ p; q }}'  | awk '{{print $1-1}}'", shell=True))
 
 nhost = hl_heads[which_hl][1]
 print('starting '+which_hl+' of '+str(nhost)+' hosts')
@@ -72,6 +76,11 @@ hl_df = df_subset.rename(columns={'ZTRUE':'redshift',
                            'i_obs_err':'i_err'})[['redshift', 
                                                   'u', 'g', 'r', 'i', 'z', 'y', 
                                                   'u_err', 'g_err', 'r_err', 'i_err', 'z_err', 'y_err']]
+
+mag_caps = {'u': 41.0, 'g': 36.1, 'r': 34.8, 'i': 34.9, 'z': 34.9, 'y': 34.9}
+for col in mag_caps.keys():
+    df['col'].values[df['col'].values > x] = y
+    hl_df[col].values[hl_df[col].values > mag_caps[col]] = mag_caps[col]
 
 quantities = hl_df.columns
 
@@ -107,6 +116,14 @@ sys.stdout.flush()
 in_pdfs = qp.Ensemble(qp.interp, data=dict(xvals=zgrid, yvals=flow_z, check_input=True))
 iqr = in_pdfs.ppf(0.75) - in_pdfs.ppf(0.25)
 p50 = in_pdfs.pdf(in_pdfs.median())
+in_pdfs.set_ancil(dict(GALID=df_subset['GALID'].values,#[idx * batch_size * batch_factor : min((idx+1) * batch_size * batch_factor, nhost)], 
+                        p50=p50, iqr=iqr))
+if idx == 0:
+    randos = random.sample(range(batch_size * batch_factor), 1000)
+    in_pdfs[randos].write_to(glob_path+'test'+which_hl+'_subset.fits')
+    print('saved 1000 uncompressed PDFs for '+which_hl+' after '+str(time.process_time() - start))
+    sys.stdout.flush()
+    
 out_pdfs = in_pdfs.convert_to(qp.quant_piecewise_gen, quants=quants, check_input=False)
 
 print('compressed batch '+str(idx)+' out of '+str(math.ceil(nhost / (batch_size * batch_factor)))+' of external chunk size '+str(len(hl_subset))+' in internal chunks of '+str(batch_size)+' for '+which_hl+' in '+str(time.process_time() - start))
@@ -116,10 +133,10 @@ sys.stdout.flush()
 out_pdfs.set_ancil(dict(GALID=df_subset['GALID'].values,#[idx * batch_size * batch_factor : min((idx+1) * batch_size * batch_factor, nhost)], 
                         p50=p50, iqr=iqr))
 out_name = 'pz'+which_hl+'batch'+str(idx)+'_'+str(batch_size * batch_factor)+'chunks'+str(batch_size)
-out_pdfs.write_to(glob_path+out_name+'.fits')
+out_pdfs.write_to(glob_path+out_name+'magcap.fits')
     
 print('saved batch '+str(idx)+' out of '+str(math.ceil(nhost / (batch_size * batch_factor)))+' of external chunk size '+str(len(hl_subset))+' in internal chunks of '+str(batch_size)+' for '+which_hl+' in '+str(time.process_time() - start))
 sys.stdout.flush()
 
-print(datetime.datetime.now())
+print('completed at '+str(datetime.datetime.now()))
 sys.stdout.flush()
