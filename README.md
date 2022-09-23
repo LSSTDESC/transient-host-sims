@@ -1,5 +1,5 @@
 # The Simulated Catalogue of Optical Transients and Correlated Hosts (SCOTCH)
-Welcome! This repository contains the code used to genenerate the SCOTCH Catalogue. The catalogue and associated data files can be downloaded from Zenodo: https://zenodo.org/record/6601211#.Ypjl2pDMLhO. If you'd just like to learn how to use the SCOTCH catalogue, a great place to start is with the tutorials at `notebooks/SCOTCH_walkthroughs.ipynb`. 
+Welcome! This repository contains the code used to generate the SCOTCH Catalogue. The catalogue and associated data files can be downloaded from Zenodo: https://zenodo.org/record/6601211#.Ypjl2pDMLhO. If you'd just like to learn how to use the SCOTCH catalogue, a great place to start is with the tutorials at `notebooks/SCOTCH_walkthroughs.ipynb`. 
 
 Our pipeline uses the code SNANA (Kessler+2009) for simulating transients, and is described in detail in Lokken and Gagliano, 2022 (in review). The methodology for constructing our hostlibs for SNe Ia, SNe II, and SNe Ib/c (requires access to cosmoDC2 through GCRCatalogs) is outlined as follows:
 
