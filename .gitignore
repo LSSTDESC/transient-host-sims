@@ -6,3 +6,4 @@ notebooks/add_PZFeatures_from_disk.ipynb
 notebooks/apply_pzflow_dc2full.ipynb
 notebooks/pzflow_DC2_conditionalFlow.ipynb
 notebooks/check_pzflow_outputs.ipynb
+scripts/ghost_scaled.csv
