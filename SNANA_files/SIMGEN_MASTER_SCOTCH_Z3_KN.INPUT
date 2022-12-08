@@ -1,0 +1,54 @@
+CONFIG:
+  BATCH_INFO:  sbatch  $SBATCH_TEMPLATES/SBATCH_Cori.TEMPLATE  40
+  BATCH_MEM:  8GB
+  PATH_SNDATA_SIM:  $SNANA_LSST_SIM
+  RANSEED_REPEAT: 40  3773459
+  FORMAT_MASK: 112     # 32(FITS) + 16(RandomCID) + 64(compact)
+  RESET_CIDOFF: 2      # flag to generate unique CID among all models
+  CIDRAN_MIN: 1000000  # set to 0 for DDF to avoid using the same ID for different events
+  NGENTOT_LC: 250
+  SIMGEN_INFILE_NONIa:
+  - SIMGEN_TEMPLATE_SCOTCH_KN.INPUT
+  GENPREFIX:    MLAG_SCOTCH_Z3_KN
+
+GENOPT_GLOBAL:  # Settings that change between DDF and WFD
+  GENPERFECT: 10 # x10^5 exposure time (2), keep intrinsic mag-smearing, no MW extinction (8), keep host extinction
+  GENRANGE_REDSHIFT: 0.023 2.95        # ML 04/11/2022 - update zmax to 3
+  HOSTLIB_STOREPAR: LOG_SFR,LOGMASS,a0_Sersic,b0_Sersic,n0_Sersic,w0_Sersic,a1_Sersic,b1_Sersic,n1_Sersic,w1_Sersic,a_rot
+  APPLY_SEARCHEFF_OPT: 0
+  NGEN_SCALE: 1.0
+  SIMSED_PATH_BINARY: $PLASTICC_MODELS/SIMSED_BINARIES/config_SCOTCH/
+  OMEGA_MATTER_LCDM: 0.3
+  OMEGA_LAMBDA_LCDM: 0.7
+  UVLAM_EXTRAPFLUX: 100
+#DONE_CONFIG
+
+
+GENVERSION_LIST:
+#------------------------------------------------------------------------------------------------
+# *********************************** GW counterpart & Exotic ***********************************
+#------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------
+# Kilonova models from Kasen 2017
+  - GENVERSION: MLAG_SCOTCH_FINAL_KN_K17
+    GENOPT:
+      INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_KN-K17.INPUT
+      GENTYPE: 50
+      APPLY_SEARCHEFF_OPT: 0
+      HOSTLIB_MNINTFLUX_SNPOS: 0.2
+      NGENTOT_LC:  1250
+      HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/UNMATCHED_KN_SHIFT_GHOST.HOSTLIB_shift_70cosmo_DROPNBR.gz
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/KN_GHOST.WGTMAP.gz
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_VARDAY_KN.SIMLIB
+#------------------------------------------------------------------------------------------------
+# Kilonova models from Bulla 2019
+  - GENVERSION: MLAG_SCOTCH_FINAL_KN_B19
+    GENOPT:
+      INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_BULLA-BNS-M2-2COMP.INPUT # changed to local copy with full zrange
+      GENTYPE: 51
+      NGENTOT_LC:  1250
+      APPLY_SEARCHEFF_OPT: 0
+      HOSTLIB_MNINTFLUX_SNPOS: 0.2
+      HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/UNMATCHED_KN_SHIFT_GHOST.HOSTLIB_shift_70cosmo_DROPNBR.gz
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/KN_GHOST.WGTMAP.gz
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_VARDAY_KN.SIMLIB

@@ -1,0 +1,225 @@
+CONFIG:
+  BATCH_INFO:  sbatch  $SBATCH_TEMPLATES/SBATCH_Cori.TEMPLATE  40
+  BATCH_MEM:  8GB
+  PATH_SNDATA_SIM:  $SNANA_LSST_SIM
+  RANSEED_REPEAT: 40  3773459
+  FORMAT_MASK: 112     # 32(FITS) + 16(RandomCID) + 64(compact)
+  RESET_CIDOFF: 2      # flag to generate unique CID among all models
+  CIDRAN_MIN: 1000000  # set to 0 for DDF to avoid using the same ID for different events
+  NGENTOT_LC: 250
+  SIMGEN_INFILE_NONIa:
+  - SIMGEN_TEMPLATE_SCOTCH.INPUT
+  GENPREFIX:    MLAG_SCOTCH_Z3
+
+GENOPT_GLOBAL:  # Settings that change between DDF and WFD
+  GENPERFECT: 10 # x10^5 exposure time (2), keep intrinsic mag-smearing, no MW extinction (8), keep host extinction
+  GENRANGE_REDSHIFT: 0.023 2.95        # ML 04/11/2022 - update zmax to 3
+  HOSTLIB_STOREPAR: LOG_SFR,LOGMASS,a0_Sersic,b0_Sersic,n0_Sersic,w0_Sersic,a1_Sersic,b1_Sersic,n1_Sersic,w1_Sersic,a_rot
+  APPLY_SEARCHEFF_OPT: 0
+  NGEN_SCALE: 1.0
+  OMEGA_MATTER: 0.3
+  OMEGA_LAMBDA: 0.7
+  SIMSED_PATH_BINARY: $PLASTICC_MODELS/SIMSED_BINARIES/config_SCOTCH/
+  UVLAM_EXTRAPFLUX: 100
+#DONE_CONFIG
+
+
+GENVERSION_LIST:
+#------------------------------------------------------------------------------------------------
+# *********************************** GW counterpart & Exotic ***********************************
+#------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------
+# Superluminous SN:  SLSN-I
+  - GENVERSION: MLAG_SCOTCH_Z3_SLSN-I
+    GENOPT:
+      INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_SLSN-I-MOSFIT.INPUT
+      GENTYPE: 40
+      NGENTOT_LC: 2500
+      HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/SNIbc_GHOST.HOSTLIB_shift_70cosmo_DROPNBR
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/SLSNI_GHOST.WGTMAP
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_2.0DAY.SIMLIB
+
+#------------------------------------------------------------------------------------------------
+# Tidal Disruption Events
+  - GENVERSION: MLAG_SCOTCH_Z3_TDE
+    GENOPT:
+      INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_TDE-MOSFIT.INPUT
+      GENTYPE: 42
+      NGENTOT_LC: 2525
+      HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/UNMATCHED_COSMODC2_GHOST.HOSTLIB_shift_70cosmo_DROPNBR
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/TDE_GHOST.WGTMAP
+      HOSTLIB_MXINTFLUX_SNPOS: 0.3
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_2.0DAY.SIMLIB
+#------------------------------------------------------------------------------------------------
+# AGN 
+  - GENVERSION: MLAG_SCOTCH_Z3_AGN20
+    GENOPT:
+      INPUT_FILE_INCLUDE:  $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_LCLIB_AGN-LSST.INPUT
+      GENTYPE: 60
+      NGENTOT_LC: 2250
+      HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/UNMATCHED_COSMODC2_GHOST.HOSTLIB_shift_70cosmo_DROPNBR
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/AGN_GHOST_Stemo20.WGTMAP
+      HOSTLIB_MXINTFLUX_SNPOS: 0.1
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_2.0DAY.SIMLIB
+
+#------------------------------------------------------------------------------------------------
+# ******************************** Extragalactic Transients *************************************
+#------------------------------------------------------------------------------------------------
+# MOSFIT-IIn
+  - GENVERSION: MLAG_SCOTCH_Z3_SNIIn-MOSFIT
+    GENOPT:
+      INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_SNIIn-MOSFIT.INPUT
+      GENTYPE: 35
+      NGENTOT_LC: 1250
+      HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/SNII_GHOST.HOSTLIB_shift_70cosmo_DROPNBR
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/SNII_GHOST.WGTMAP
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_2.0DAY.SIMLIB
+
+#------------------------------------------------------------------------------------------------
+# Core collapse Type IIn templates from Vincenzi et al. 2021
+  - GENVERSION: MLAG_SCOTCH_Z3_SNIIn+HostXT_V19
+    GENOPT:
+      INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_V19_SNIIn+HostXT.INPUT
+      GENTYPE: 36
+      NGENTOT_LC: 1250
+      HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/SNII_GHOST.HOSTLIB_shift_70cosmo_DROPNBR
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/SNII_GHOST.WGTMAP
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_2.0DAY.SIMLIB
+
+#------------------------------------------------------------------------------------------------
+# Core collapse Type II using pca (5->12 on May 9 2018) for end-of-challenge model release
+  - GENVERSION: MLAG_SCOTCH_Z3_SNII-NMF
+    GENOPT:
+      INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_SNII-NMF.INPUT
+      GENTYPE: 30
+      NGENTOT_LC: 15825
+      HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/SNII_GHOST.HOSTLIB_shift_70cosmo_DROPNBR
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/SNII_GHOST.WGTMAP
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_2.0DAY.SIMLIB
+
+#------------------------------------------------------------------------------------------------
+# legacy NON1ASED
+# Core collapse Type II from K10 templates
+  - GENVERSION: MLAG_SCOTCH_Z3_SNII-Templates
+    GENOPT:
+      INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_SNII-Templates.INPUT
+      GENTYPE: 31
+      NGENTOT_LC: 15825
+      HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/SNII_GHOST.HOSTLIB_shift_70cosmo_DROPNBR
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/SNII_GHOST.WGTMAP
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_2.0DAY.SIMLIB
+
+#------------------------------------------------------------------------------------------------
+# Core collapse Type II (IIP, IIL) templates from Vincenzi et al. 2021
+  - GENVERSION: MLAG_SCOTCH_Z3_SNII+HostXT_V19
+    GENOPT:
+      INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_V19_SNII+HostXT.INPUT
+      GENTYPE: 32
+      NGENTOT_LC: 15825
+      HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/SNII_GHOST.HOSTLIB_shift_70cosmo_DROPNBR
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/SNII_GHOST.WGTMAP
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_2.0DAY.SIMLIB
+
+#------------------------------------------------------------------------------------------------
+# NON1ASED-Ibc
+# Core collapse Type Ib from K10 templates
+  - GENVERSION: MLAG_SCOTCH_Z3_SNIb-Templates
+    GENOPT:
+      INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_SNIb-Templates.INPUT
+      GENTYPE: 20
+      NGENTOT_LC: 1250
+      HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/SNIbc_GHOST.HOSTLIB_shift_70cosmo_DROPNBR
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/SNIb_GHOST.WGTMAP
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_2.0DAY.SIMLIB
+
+#------------------------------------------------------------------------------------------------
+# SN Ib templates from Vincenzi et al. 2021
+  - GENVERSION: MLAG_SCOTCH_Z3_SNIb+HostXT_V19
+    GENOPT:
+      INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_V19_SNIb+HostXT.INPUT
+      GENTYPE: 21
+      NGENTOT_LC: 1250
+      HOSTLIB_FILE:  $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/SNIbc_GHOST.HOSTLIB_shift_70cosmo_DROPNBR
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/SNIb_GHOST.WGTMAP
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_2.0DAY.SIMLIB
+
+#------------------------------------------------------------------------------------------------
+# NON1ASED-Ibc
+# Core collapse Type Ic from K10 templates
+  - GENVERSION: MLAG_SCOTCH_Z3_SNIc-Templates
+    GENOPT:
+      INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_SNIc-Templates.INPUT
+      GENTYPE: 25
+      NGENTOT_LC: 1250
+      HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/SNIbc_GHOST.HOSTLIB_shift_70cosmo_DROPNBR
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/SNIc_GHOST.WGTMAP
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_2.0DAY.SIMLIB
+
+#------------------------------------------------------------------------------------------------
+# SN Ic templates from Vincenzi et al. 2021
+  - GENVERSION: MLAG_SCOTCH_Z3_SNIc+HostXT_V19
+    GENOPT:
+      INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_V19_SNIc+HostXT.INPUT
+      GENTYPE: 26
+      NGENTOT_LC: 1250
+      HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/SNIbc_GHOST.HOSTLIB_shift_70cosmo_DROPNBR
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/SNIc_GHOST.WGTMAP
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_2.0DAY.SIMLIB
+
+#------------------------------------------------------------------------------------------------
+# SN IcBL templates from Vincenzi et al. 2021
+  - GENVERSION: MLAG_SCOTCH_Z3_SNIcBL+HostXT_V19
+    GENOPT:
+      INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_V19_SNIcBL+HostXT.INPUT
+      GENTYPE: 27
+      NGENTOT_LC: 2500
+      HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/SNIbc_GHOST.HOSTLIB_shift_70cosmo_DROPNBR
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/SNIcBL_GHOST.WGTMAP
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_2.0DAY.SIMLIB
+
+#------------------------------------------------------------------------------------------------
+# SN IIb templates from Vincenzi et al. 2021
+  - GENVERSION: MLAG_SCOTCH_Z3_SNIIb+HostXT_V19
+    GENOPT:
+      INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_V19_SNIIb+HostXT.INPUT
+      GENTYPE: 37
+      NGENTOT_LC: 2500
+      HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/SNIbc_GHOST.HOSTLIB_shift_70cosmo_DROPNBR
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/SNIb_GHOST.WGTMAP
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_2.0DAY.SIMLIB
+
+#------------------------------------------------------------------------------------------------
+# Type Ia SN
+# reuse each SIMLIB entry SIMLIB_REPEAT times before moving to the next one; makes the code run faster; remove/change for the real simulations
+  - GENVERSION: MLAG_SCOTCH_Z3_SNIa-SALT2
+    GENOPT:
+      INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_SNIa-SALT2.INPUT
+      GENTYPE: 10
+      NGENTOT_LC: 50000
+      HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/SNIa_GHOST.HOSTLIB_shift_70cosmo_DROPNBR
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/SNIa_GHOST.WGTMAP
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_2.0DAY.SIMLIB
+
+#------------------------------------------------------------------------------------------------
+# Type Ia - 1991bg subclass
+  - GENVERSION: MLAG_SCOTCH_Z3_SNIa-91bg
+    GENOPT:
+      INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_SNIa-91bg.INPUT
+      GENTYPE: 11
+      NGENTOT_LC: 2500
+      HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/SNIa_GHOST.HOSTLIB_shift_70cosmo_DROPNBR
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/SN91bg_GHOST.WGTMAP
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_2.0DAY.SIMLIB
+
+#------------------------------------------------------------------------------------------------
+# Type Ia - 2002cx subclass
+  - GENVERSION: MLAG_SCOTCH_Z3_SNIax
+    GENOPT:
+      INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_SNIax.INPUT
+      GENTYPE: 12
+      NGENTOT_LC: 2500
+      HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/SNIa_GHOST.HOSTLIB_shift_70cosmo_DROPNBR
+      HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/SNIax_GHOST.WGTMAP
+      SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_2.0DAY.SIMLIB
+
+#------------------------------------------------------------------------------------------------
