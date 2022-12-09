@@ -30,21 +30,20 @@ GENVERSION_LIST:
 #------------------------------------------------------------------------------------------------
 # Kilonova models from Kasen 2017
 # Nov/2021 C.Alves: ?? Do we want a spectroscopic sample?? SIMGEN_MASTER_LSST_WFD_HOSTLIB.INPUT does not have SEARCHEFF_SPEC_SCALE
-  - GENVERSION: MLAG_SCOTCH_FINAL_KN_K17
+  - GENVERSION: MLAG_SCOTCH_ZLIM_KN_K17
     GENOPT:
       INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_KN-K17.INPUT
       GENTYPE: 50
       NGENTOT_LC:  1250
       HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/UNMATCHED_KN_SHIFT_GHOST.HOSTLIB_shift_70cosmo_DROPNBR.gz
       HOSTLIB_MNINTFLUX_SNPOS: 0.2
-
       HOSTLIB_WGTMAP_FILE: $ELASTICC_ROOT/HOSTLIB/WGTMAPS/KN_GHOST.WGTMAP
       SIMLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/survey_config/SCOTCH_IDEAL_VARDAY_KN.SIMLIB
 
 #------------------------------------------------------------------------------------------------
 # Kilonova models from Bulla 2019
 # Nov/2021 C.Alves: ?? Do we want a spectroscopic sample?? SIMGEN_MASTER_LSST_WFD_HOSTLIB.INPUT does not have SEARCHEFF_SPEC_SCALE
-  - GENVERSION: MLAG_SCOTCH_FINAL_KN_B19
+  - GENVERSION: MLAG_SCOTCH_ZLIM_KN_B19
     GENOPT:
       INPUT_FILE_INCLUDE: $ELASTICC_ROOT/model_config/SIMGEN_INCLUDE_BULLA-BNS-M2-2COMP.INPUT # changed to local copy with full zrange
       HOSTLIB_FILE: $SNANA_LSST_ROOT/PLASTICC_DEV/HOSTLIB/70cosmo/UNMATCHED_KN_SHIFT_GHOST.HOSTLIB_shift_70cosmo_DROPNBR.gz
